@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@drawable/background_gradient"
@@ -9,33 +10,36 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="56dp"
+        android:paddingTop="32dp"
         android:paddingLeft="24dp"
         android:paddingRight="24dp">
 
         <ImageView android:src="@drawable/trivia"
             android:layout_width="wrap_content"
-            android:layout_height="72dp"
+            android:layout_height="0dp"
             android:layout_marginBottom="24dp"
-            android:layout_gravity="center_horizontal" />
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"/>
 
-        <io.github.iamutkarshtiwari.myapplication.MyTextView
+        <io.github.iamutkarshtiwari.trivia.MyTextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:text="@string/app_name"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:fontFamily="s"
             android:textSize="27sp"
+            custom:fontName="JustTell"
+            android:layout_weight="1"
             />
 
         <!-- Email Label -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:theme="@style/LoginTextLabel">
+            android:theme="@style/LoginTextLabel"
+            android:layout_weight="1">
             <EditText android:id="@+id/input_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -47,10 +51,12 @@
         <!-- Password Label -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:theme="@style/LoginTextLabel">
+            android:theme="@style/LoginTextLabel"
+            android:layout_weight="1">
+
             <EditText android:id="@+id/input_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -59,23 +65,33 @@
                 android:textColor="@color/white"/>
         </android.support.design.widget.TextInputLayout>
 
-        <android.support.v7.widget.AppCompatButton
+        <Button
             android:id="@+id/btn_login"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp"
             android:padding="12dp"
+            android:layout_weight="1"
+            android:background="@color/white"
             android:text="@string/login"/>
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/google_login"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center"/>
 
         <TextView android:id="@+id/link_signup"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginBottom="24dp"
             android:textColor="@color/white"
             android:text="@string/no_account_yet"
             android:gravity="center"
-            android:textSize="16sp"/>
+            android:textSize="16sp"
+            android:layout_weight="1"/>
 
     </LinearLayout>
 </ScrollView>

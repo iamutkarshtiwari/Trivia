@@ -1,4 +1,4 @@
-package io.github.iamutkarshtiwari.myapplication;
+package io.github.iamutkarshtiwari.trivia;
 
 import org.junit.Test;
 

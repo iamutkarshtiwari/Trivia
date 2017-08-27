@@ -1,4 +1,4 @@
-package io.github.iamutkarshtiwari.myapplication;
+package io.github.iamutkarshtiwari.trivia;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

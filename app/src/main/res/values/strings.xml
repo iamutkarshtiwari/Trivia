@@ -28,5 +28,16 @@
     <string name="already_a_member">Already a member? Login</string>
     <string name="authenticating">Authenticating...</string>
     <string name="creating_account">Creating account...</string>
+    <string name="profile">Profile</string>
+    <string name="categories">Categories</string>
+    <string name="difficulty">Difficulty</string>
+    <string name="type">Type</string>
+    <string name="logout">Logout</string>
+    <string name="login_failed">Login failed</string>
+    <string name="authentication_failed">Authentication failed</string>
+    <string name="google_services_error">Google Play Services error</string>
+    <string name="wanna_logout">"Do you want to logout?"</string>
+    <string name="ok">OK</string>
+    <string name="cancel">CANCEL</string>
 
 </resources>

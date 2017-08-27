@@ -1,10 +1,11 @@
-package io.github.iamutkarshtiwari.myapplication;
+package io.github.iamutkarshtiwari.trivia;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -12,9 +13,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.app.AlertDialog;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class Trivia extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+
+    private static final int RC_SIGN_OUT = 9002;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +50,20 @@ public class Trivia extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        // Firebase instance
+        mAuth = FirebaseAuth.getInstance();
+    }
+
+    // [START on_start_check_user]
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            sendToLogin();
+        }
     }
 
     @Override
@@ -80,22 +104,56 @@ public class Trivia extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_profile) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_category) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_type) {
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_difficulty) {
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_logout) {
+            //Home is name of the activity
+            AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
+            builder.setMessage(getStringFromID(R.string.wanna_logout));
+            builder.setPositiveButton(getStringFromID(R.string.ok), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    mAuth.signOut();
+                    sendToLogin();
+                }
+            });
 
-        } else if (id == R.id.nav_send) {
+            builder.setNegativeButton(getStringFromID(R.string.cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.cancel();
+                }
+            });
+
+            AlertDialog alert = builder.create();
+            alert.show();
+            return true;
 
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    /**
+     * Gets string from ID
+     * @param ID string ID
+     * @return String value
+     */
+    public String getStringFromID(int ID) {
+        return String.format(getString(ID));
+    }
+
+    public void sendToLogin() {
+        Intent intent = new Intent(Trivia.this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
