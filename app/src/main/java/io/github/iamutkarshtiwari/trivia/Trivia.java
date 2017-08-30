@@ -2,6 +2,8 @@ package io.github.iamutkarshtiwari.trivia;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -22,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
 
+import java.net.URL;
 import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -72,7 +75,7 @@ public class Trivia extends AppCompatActivity
 //            createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
             // Set's profile picture
             CircleImageView imageView = (CircleImageView) findViewById(R.id.imageView); // create Picasso.Builder object
-            Picasso.Builder picassoBuilder = new Picasso.Builder(context);
+            Picasso.Builder picassoBuilder = new Picasso.Builder(this);
 
             // Picasso.Builder creates the Picasso object to do the actual requests
             Picasso picasso = picassoBuilder.build();
@@ -82,10 +85,17 @@ public class Trivia extends AppCompatActivity
 
             if (photoURL != null) {
 //                Picasso.with(Trivia.this.context).load(photoURL).into(imageView);
-                picasso.load(photoURL).fit().centerCrop()
-                        .placeholder(R.drawable.profile)
-                        .error(R.drawable.profile)
-                        .into(imageView);
+//                picasso.load(photoURL).fit().centerCrop()
+//                        .placeholder(R.drawable.profile)
+//                        .error(R.drawable.profile)
+//                        .into(imageView);
+                try {
+                    URL url = new URL(photoURL);
+                    Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                    imageView.setImageBitmap(bmp);
+                } catch (Exception e) {
+                    createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
+                }
             } else {
                 createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
             }
