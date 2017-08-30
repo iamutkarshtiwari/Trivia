@@ -2,6 +2,7 @@ package io.github.iamutkarshtiwari.trivia;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -50,6 +51,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     // Authorizations
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         setContentView(R.layout.activity_login);
         ButterKnife.inject(this);
 
+        getWindow().setBackgroundDrawableResource(R.drawable.background_gradient);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
@@ -102,8 +105,25 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         mAuth = FirebaseAuth.getInstance();
         // [END initialize_auth]
 
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+        };
+
 
     }
+
+
 
 
 
@@ -112,8 +132,18 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     @Override
     public void onStart() {
         super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+
     }
     // [END on_start_check_user]
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
 
     // [START onactivityresult]
     @Override
@@ -138,13 +168,11 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     // [END onactivityresult]
 
     // [START auth_with_google]
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-        // [START_EXCLUDE silent]
 
         createProgressDialog(R.string.authenticating);
         progressDialog.show();
-        // [END_EXCLUDE]
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -170,6 +198,23 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 });
     }
     // [END auth_with_google]
+
+//    public Bundle createBundle(final GoogleSignInAccount acct) {
+
+
+//        String personName = acct.getDisplayName();
+////        String personGivenName = acct.getGivenName();
+////        String personFamilyName = acct.getFamilyName();
+//        String personEmail = acct.getEmail();
+//        String personId = acct.getId();
+//        Uri personPhoto = acct.getPhotoUrl();
+//        Bundle bundle = new Bundle();
+//        bundle.putString(“name"", personName);
+//        bundle.putString(“email”, personEmail);
+//        bundle.put (“photoURI”, personPhoto);
+////        i.putExtras(bundle);
+//        return bundle;
+//    }
 
     private void sendToSignup() {
         Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
@@ -245,7 +290,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
      * @param message Message to be displayed
      */
     public void createProgressDialog(int message) {
-        progressDialog = new ProgressDialog(LoginActivity.this, R.style.AppTheme_Dark_Dialog);
+        progressDialog = new ProgressDialog(LoginActivity.this);
         progressDialog.setIndeterminate(true);
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.setMessage(String.format(getString(message)));
@@ -281,6 +326,24 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
 
         // TODO: Implement your own authentication logic here.
 
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "signInWithEmail:failed", task.getException());
+                            createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
+                        }
+
+                        // ...
+                    }
+                });
+
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
@@ -291,6 +354,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                     }
                 }, 3000);
     }
+
 
 
 //    @Override

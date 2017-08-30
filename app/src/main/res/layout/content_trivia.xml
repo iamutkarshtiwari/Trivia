@@ -1,13 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@drawable/background_gradient"
-    android:fitsSystemWindows="true">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    android:fillViewport="true"
+    tools:context="io.github.iamutkarshtiwari.trivia.Trivia"
+    tools:ignore="NestedWeights">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:paddingTop="?attr/actionBarSize">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="160dp"
+            android:background="@color/whiteGray"/>
+
+
+        <RelativeLayout
+            android:id="@+id/question_panel"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="80dp"
+            android:background="@drawable/questions_bg">
+
+            <TextView
+                android:id="@+id/category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/category_bg"
+                android:padding="8dp"
+                android:text="Category" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/category"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="16dp"
+                android:text="Hello this is the question?"
+                android:textAlignment="center"
+                android:textColor="@color/textBlack"
+                android:textSize="16sp" />
+
+        </RelativeLayout>
+
+        <GridView
+            android:id="@+id/gridview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/question_panel"
+            android:columnWidth="90dp"
+            android:gravity="center"
+            android:horizontalSpacing="4dp"
+            android:numColumns="auto_fit"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="4dp" />
+
+        <LinearLayout
+            android:id="@+id/option_panel"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/next_question"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/firstOption"
+                android:clickable="true"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:src="@drawable/next" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/next_question"
+                    android:textColor="@color/white" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/remove_one"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/secondOption"
+                android:clickable="true"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/puzzle" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/remove_one"
+                    android:textColor="@color/white" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/_15_seconds"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/thirdOption"
+                android:clickable="true"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/extra_secs" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/_15_seconds"
+                    android:textColor="@color/white" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
 
 </ScrollView>

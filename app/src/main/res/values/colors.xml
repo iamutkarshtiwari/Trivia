@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#00BCD4</color>
-    <color name="colorPrimaryDark">#0097A7</color>
-    <color name="colorAccent">#4DD0E1</color>
-    <color name="blueGradient">#ff2d9a59</color>
-    <color name="centreBlueGradient">#ff42959a</color>
-    <color name="greenGradient">#ff23729a</color>
+    <color name="colorPrimary">#8D44AD</color>
+    <color name="colorPrimaryDark">#783D91</color>
+    <color name="colorAccent">#baa0e7</color>
+    <color name="startGradient">#ffA770EF</color>
+    <color name="centreGradient">#ffCF8BF3</color>
+    <color name="endGradient">#ffFDB99B</color>
     <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+    <color name="colorPrimaryLight">#C5CAE9</color>
+    <color name="textBlack">#2F3C44</color>
+    <color name="whiteGray">#E4E7EC</color>
+    <color name="firstOption">#874FCC</color>
+    <color name="secondOption">#5CC4C3</color>
+    <color name="thirdOption">#F06970</color>
+
 </resources>

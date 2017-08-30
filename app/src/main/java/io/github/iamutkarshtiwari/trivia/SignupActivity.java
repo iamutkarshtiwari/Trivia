@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -42,6 +43,7 @@ public class SignupActivity extends AppCompatActivity {
 
     // Authorizations
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @InjectView(R.id.input_name) EditText _nameText;
     @InjectView(R.id.input_email) EditText _emailText;
@@ -58,6 +60,10 @@ public class SignupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signup);
         ButterKnife.inject(this);
 
+
+        getWindow().setBackgroundDrawableResource(R.drawable.background_gradient);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
         _signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,6 +79,35 @@ public class SignupActivity extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+        };
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 
     public void signup() {
@@ -95,7 +130,22 @@ public class SignupActivity extends AppCompatActivity {
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        // TODO: Implement your own signup logic here.
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
+                        }
+
+                        // ...
+                    }
+                });
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -129,6 +179,15 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     /**
+     * Gets string from ID
+     * @param ID string ID
+     * @return String value
+     */
+    public String getStringFromID(int ID) {
+        return String.format(getString(ID));
+    }
+
+    /**
      * Toast creator
      * @param messageID Message to be shown
      * @param length Toast duration
@@ -157,21 +216,21 @@ public class SignupActivity extends AppCompatActivity {
         String password = _passwordText.getText().toString();
 
         if (name.isEmpty() || name.length() < 3) {
-            _nameText.setError("at least 3 characters");
+            _nameText.setError(getStringFromID(R.string.at_least_3));
             valid = false;
         } else {
             _nameText.setError(null);
         }
 
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
+            _emailText.setError(getStringFromID(R.string.enter_a_valid_email));
             valid = false;
         } else {
             _emailText.setError(null);
         }
 
         if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
+            _passwordText.setError(getStringFromID(R.string.alphanumeric_error));
             valid = false;
         } else {
             _passwordText.setError(null);

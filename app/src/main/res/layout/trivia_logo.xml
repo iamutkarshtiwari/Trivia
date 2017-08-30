@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/trivia_logo"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/trivia" />
+
+    <io.github.iamutkarshtiwari.trivia.MyTextView
+        android:id="@+id/trivia_title"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_below="@id/trivia_logo"
+        android:text="@string/app_name"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="27sp"
+        custom:fontName="JustTell"/>
+
+</RelativeLayout>

@@ -14,25 +14,31 @@ public class MyTextView extends TextView {
 
     public MyTextView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        TypedArray a = context.obtainStyledAttributes(attrs,
-                R.styleable.MyTextView, defStyle, 0);
-        String fontName = a.getString(R.styleable.MyTextView_fontName);
-        a.recycle();
-        init(fontName);
+        readAttr(context, attrs);
     }
 
     public MyTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        readAttr(context, attrs);
     }
 
     public MyTextView(Context context) {
         super(context);
     }
 
-    public void init(String font) {
-        Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "font/" + font + ((font.compareTo("MyriadPro") == 0 ? ".ttf" : ".otf")));
-//        Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "font/JustTell.otf");
-        setTypeface(tf ,1);
 
+
+    private void readAttr(Context context, AttributeSet attrs) {
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.MyTextView);
+        // Read the title and set it if any
+        String fontName = a.getString(R.styleable.MyTextView_fontName) ;
+
+        if (fontName != null) {
+            Typeface tf = Typeface.createFromAsset(context.getAssets(), "font/" + fontName + ((fontName.compareTo("MyriadPro") == 0 ? ".ttf" : ".otf")));
+            setTypeface(tf ,1);
+        }
+
+        a.recycle();
     }
+
 }

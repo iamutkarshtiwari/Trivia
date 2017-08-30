@@ -2,6 +2,7 @@ package io.github.iamutkarshtiwari.trivia;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -15,9 +16,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.app.AlertDialog;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Picasso;
+
+import java.util.Set;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class Trivia extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -33,15 +40,6 @@ public class Trivia extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -51,8 +49,61 @@ public class Trivia extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
         // Firebase instance
         mAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        if (user != null) {
+            // Name, email address, and profile photo Url
+            String name = user.getDisplayName();
+            String email = user.getEmail();
+            String photoURL = user.getPhotoUrl().toString();
+
+
+            // The user's ID, unique to the Firebase project. Do NOT use this value to
+            // authenticate with your backend server, if you have one. Use
+            // FirebaseUser.getToken() instead.
+            String uid = user.getUid();
+
+
+//            Toast.makeText(getApplicationContext(), photoURL.toString(), Toast.LENGTH_LONG).show();
+//            createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
+            // Set's profile picture
+            CircleImageView imageView = (CircleImageView) findViewById(R.id.imageView); // create Picasso.Builder object
+            Picasso.Builder picassoBuilder = new Picasso.Builder(context);
+
+            // Picasso.Builder creates the Picasso object to do the actual requests
+            Picasso picasso = picassoBuilder.build();
+
+            // instead of Picasso.with(Context context) you directly use this new custom Picasso object
+
+
+            if (photoURL != null) {
+//                Picasso.with(Trivia.this.context).load(photoURL).into(imageView);
+                picasso.load(photoURL).fit().centerCrop()
+                        .placeholder(R.drawable.profile)
+                        .error(R.drawable.profile)
+                        .into(imageView);
+            } else {
+                createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
+            }
+
+        }
+
+
+    }
+
+
+    /**
+     * Toast creator
+     * @param messageID Message to be shown
+     * @param length Toast duration
+     */
+    public void createToast(int messageID, int length) {
+        Toast.makeText(getApplicationContext(), String.format(getString(messageID)), length).show();
+
     }
 
     // [START on_start_check_user]
@@ -112,6 +163,7 @@ public class Trivia extends AppCompatActivity
 
         } else if (id == R.id.nav_difficulty) {
 
+            return true;
         } else if (id == R.id.nav_logout) {
             //Home is name of the activity
             AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
@@ -133,13 +185,17 @@ public class Trivia extends AppCompatActivity
 
             AlertDialog alert = builder.create();
             alert.show();
-            return true;
 
         }
 
+        return closeDrawer();
+
+    }
+
+    public boolean closeDrawer() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
-        return true;
+        return false;
     }
 
     /**

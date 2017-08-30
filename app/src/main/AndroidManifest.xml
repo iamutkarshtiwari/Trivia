@@ -17,7 +17,8 @@
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/NoActionBar">
+            android:theme="@style/NoActionBar"
+            android:windowSoftInputMode="adjustPan">
         </activity>
         <activity
             android:name=".Trivia"
