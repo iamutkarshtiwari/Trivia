@@ -30,9 +30,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
@@ -53,6 +56,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private DatabaseReference mDatabase;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,9 +100,8 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        // [START initialize_auth]
         mAuth = FirebaseAuth.getInstance();
-        // [END initialize_auth]
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -160,9 +163,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     // [START auth_with_google]
     private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-
         createProgressDialog(R.string.authenticating);
-
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -172,6 +173,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
+                            createUserInFirebase(user.getDisplayName(), user.getEmail(), user.getUid());
                             sendToTrivia();
 
                         } else {
@@ -189,6 +191,19 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     // [END auth_with_google]
 
 
+    /**
+     * Save the data values of user in Firebase
+     * @param name Name of user
+     * @param email emailId of user
+     * @param Uid unique user id in Firebase
+     */
+    public void createUserInFirebase(String name, String email, String Uid) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        mDatabase.child("users").child(Uid).setValue(user);
+    }
+
     public void sendToSignup() {
         Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
         startActivityForResult(intent, RC_SIGN_UP);
@@ -199,6 +214,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
      */
     public void sendToTrivia() {
         Intent intent = new Intent(getApplicationContext(), Trivia.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }
@@ -295,7 +311,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        // TODO: Implement your own authentication logic here.
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -324,21 +339,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                     }
                 }, 3000);
     }
-
-
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (requestCode == REQUEST_SIGNUP) {
-//            if (resultCode == RESULT_OK) {
-//
-//                // TODO: Implement successful signup logic here
-//                // By default we just finish the Activity and log them in automatically
-//                this.finish();
-//            }
-//        }
-//    }
-
 
 
     @Override

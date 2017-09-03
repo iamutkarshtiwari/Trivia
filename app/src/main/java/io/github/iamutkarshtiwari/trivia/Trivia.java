@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -26,10 +27,19 @@ import android.app.AlertDialog;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
@@ -37,19 +47,26 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class Trivia extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener {
 
 
+    private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
+
     private FirebaseAuth mAuth;
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
-    NavigationView navigationView;
+    private SharedPreferences pref;
+    private SharedPreferences.Editor editor;
+    private NavigationView navigationView;
+    private DatabaseReference mDatabase;
+    private GoogleApiClient mGoogleApiClient;
 
 
     @Override
@@ -71,49 +88,77 @@ public class Trivia extends AppCompatActivity
 
         // Firebase instance
         mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
 
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         editor = pref.edit();
 
         FirebaseUser user = mAuth.getCurrentUser();
 
+        // If user logged in
         if (user != null) {
-            // Name, email address, and profile photo Url
-            String name = user.getDisplayName();
-            String email = user.getEmail();
-            Uri photoUri = user.getPhotoUrl();
 
+
+            editor.putString("user_email", user.getEmail());
+            editor.commit();
+
+            // Display user name and email in navigation header view
             View navHeaderView = navigationView.getHeaderView(0);
+            final TextView userName = (TextView) navHeaderView.findViewById(R.id.name);
 
-            TextView userName = (TextView) navHeaderView.findViewById(R.id.name);
-            userName.setText(name);
+            if (pref.getString("user_name", "").length() == 0) {
+                if (user.getDisplayName() != null) {
+                    editor.putString("user_name", user.getDisplayName());
+                    editor.commit();
+                    userName.setText(pref.getString("user_name", ""));
+                } else {
+                    // Fetch user's name from database
+                    mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            // Get user value
+                            User user = dataSnapshot.getValue(User.class);
+                            editor.putString("user_name", user.getName());
+                            editor.commit();
+                            userName.setText(pref.getString("user_name", ""));
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.e("Firebase Database Error", "");
+                        }
+                    });
+                }
+            } else {
+                userName.setText(pref.getString("user_name", ""));
+            }
 
             TextView userEmail = (TextView) navHeaderView.findViewById(R.id.email);
-            userEmail.setText(email);
+            userEmail.setText(pref.getString("user_email", ""));
 
-
-//            Log.e("Image ERROR: ", name);
-            Log.e("Image ERROR: ", email);
-
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference myRef = database.getReference("message");
-
-            myRef.setValue("Hello, World!");
-
-
-
-            // The user's ID, unique to the Firebase project. Do NOT use this value to
-            // authenticate with your backend server, if you have one. Use
-            // FirebaseUser.getToken() instead.
-            String uid = user.getUid();
-
-            // Downloads user profile image
+            // Set user profile image
             try {
-                String photoURL = photoUri.toString();
-                new ImageDownloader().execute(photoURL);
+                if (pref.getString("user_image", "").length() == 0) {
+                    String photoURL = user.getPhotoUrl().toString();
+                    new ImageDownloader().execute(photoURL);
+                } else {
+                    CircleImageView profileImageView = (CircleImageView) navHeaderView.findViewById(R.id.imageView);
+                    profileImageView.setImageBitmap(
+                            decodeToBase64(pref.getString("user_image", "")));
+                }
+
             } catch (Exception e) {
                 Log.e("Image ERROR: ", Log.getStackTraceString(e));
-                createToast(R.string.profile_image_error, Toast.LENGTH_SHORT);
             }
 
 
@@ -122,33 +167,13 @@ public class Trivia extends AppCompatActivity
 
     }
 
-    /**
-     * Converts bitmap image to base64
-     * @param image bitmap image
-     * @return encode base64 string
-     */
-    public String encodeToBase64(Bitmap img) {
-        Bitmap image = img;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] b = baos.toByteArray();
-        String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
-
-        Log.d("Image Log:", imageEncoded);
-        return imageEncoded;
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
+        // be available.
+        Log.d(TAG, "onConnectionFailed:" + connectionResult);
+        createToast(R.string.google_services_error, Toast.LENGTH_SHORT);
     }
-
-    /**
-     * Gets bitmap image from base64 string
-     * @param input base64 string
-     * @return Bitmap image
-     */
-    public Bitmap decodeToBase64(String input) {
-        byte[] decodedByte = Base64.decode(input, 0);
-        return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
-    }
-
-
 
     /**
      * Toast creator
@@ -219,13 +244,14 @@ public class Trivia extends AppCompatActivity
 
             return true;
         } else if (id == R.id.nav_logout) {
-            //Home is name of the activity
+            // Confirmation alert
             AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
             builder.setMessage(getStringFromID(R.string.wanna_logout));
             builder.setPositiveButton(getStringFromID(R.string.ok), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    mAuth.signOut();
+                    signOut();
+                    clearPreferences();
                     sendToLogin();
                 }
             });
@@ -241,7 +267,6 @@ public class Trivia extends AppCompatActivity
             alert.show();
 
         }
-
         return closeDrawer();
 
     }
@@ -250,6 +275,42 @@ public class Trivia extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return false;
+    }
+
+    public void clearPreferences() {
+        editor.putString("user_name", "");
+        editor.putString("user_email", "");
+
+        // Clear difficulty choices
+        ArrayList<String> difficulty = new ArrayList<>();
+        Set<String> set = new HashSet<>();
+        set.addAll(difficulty);
+        editor.putStringSet("user_difficulty", set);
+
+        // Clear category selections
+        ArrayList<String> categories = new ArrayList<>();
+        set = new HashSet<>();
+        set.addAll(categories);
+        editor.putStringSet("user_categories", set);
+
+        // Clear image base64 string
+        editor.putString("user_image", "");
+
+        editor.commit();
+    }
+
+    private void signOut() {
+        // Firebase sign out
+        mAuth.signOut();
+
+        // Google sign out
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        return;
+                    }
+                });
     }
 
     /**
@@ -263,10 +324,36 @@ public class Trivia extends AppCompatActivity
 
     public void sendToLogin() {
         Intent intent = new Intent(Trivia.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
     }
 
+    /**
+     * Converts bitmap image to base64
+     * @param img bitmap image
+     * @return encoded base64 string
+     */
+    public String encodeToBase64(Bitmap img) {
+        Bitmap image = img;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] b = baos.toByteArray();
+        String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
+
+        Log.d("Image Log:", imageEncoded);
+        return imageEncoded;
+    }
+
+    /**
+     * Gets bitmap image from base64 string
+     * @param input base64 string
+     * @return Bitmap image
+     */
+    public Bitmap decodeToBase64(String input) {
+        byte[] decodedByte = Base64.decode(input, 0);
+        return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+    }
 
     // Async class to download profile image
     private class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
@@ -292,6 +379,9 @@ public class Trivia extends AppCompatActivity
             CircleImageView profileImageView = (CircleImageView) navHeaderView.findViewById(R.id.imageView);
             if (result != null) {
                 profileImageView.setImageBitmap(result);
+                // Save in shared preferences
+                editor.putString("user_image", encodeToBase64(result));
+                editor.commit();
             }
 //            simpleWaitDialog.dismiss();
 

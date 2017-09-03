@@ -20,6 +20,7 @@ import android.widget.Toast;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import io.github.iamutkarshtiwari.trivia.R;
+import io.github.iamutkarshtiwari.trivia.models.User;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -36,6 +37,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -46,6 +49,7 @@ public class SignupActivity extends AppCompatActivity {
     // Authorizations
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private DatabaseReference mDatabase;
 
     @InjectView(R.id.input_name) EditText _nameText;
     @InjectView(R.id.input_email) EditText _emailText;
@@ -53,7 +57,7 @@ public class SignupActivity extends AppCompatActivity {
     @InjectView(R.id.btn_signup) Button _signupButton;
     @InjectView(R.id.link_login) TextView _loginLink;
 
-    ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;
 
     // Button listeners
 //    findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -83,6 +87,7 @@ public class SignupActivity extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -124,9 +129,9 @@ public class SignupActivity extends AppCompatActivity {
 
         createProgressDialog(R.string.creating_account);
 
-        String name = _nameText.getText().toString();
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        final String name = _nameText.getText().toString();
+        final String email = _emailText.getText().toString();
+        final String password = _passwordText.getText().toString();
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -141,10 +146,11 @@ public class SignupActivity extends AppCompatActivity {
                             createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
                         } else {
                             progressDialog.dismiss();
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            createUserInFirebase(name, email, user.getUid());
                             sendToTrivia();
                         }
 
-                        // ...
                     }
                 });
 
@@ -157,6 +163,20 @@ public class SignupActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                     }
                 }, 3000);
+    }
+
+
+    /**
+     * Save the data values of user in Firebase
+     * @param name Name of user
+     * @param email emailId of user
+     * @param Uid unique user id in Firebase
+     */
+    public void createUserInFirebase(String name, String email, String Uid) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        mDatabase.child("users").child(Uid).setValue(user);
     }
 
     /**
@@ -195,7 +215,7 @@ public class SignupActivity extends AppCompatActivity {
      */
     public void sendToTrivia() {
         Intent intent = new Intent(getApplicationContext(), Trivia.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }
