@@ -1,6 +1,8 @@
 package io.github.iamutkarshtiwari.trivia;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -50,6 +52,8 @@ public class SignupActivity extends AppCompatActivity {
     @InjectView(R.id.input_password) EditText _passwordText;
     @InjectView(R.id.btn_signup) Button _signupButton;
     @InjectView(R.id.link_login) TextView _loginLink;
+
+    ProgressDialog progressDialog;
 
     // Button listeners
 //    findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -118,13 +122,7 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        _signupButton.setEnabled(false);
-
-        final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
-                R.style.AppTheme);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(String.format(getString(R.string.creating_account)));
-        progressDialog.show();
+        createProgressDialog(R.string.creating_account);
 
         String name = _nameText.getText().toString();
         String email = _emailText.getText().toString();
@@ -141,27 +139,12 @@ public class SignupActivity extends AppCompatActivity {
                         // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
                             createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
+                        } else {
+                            progressDialog.dismiss();
+                            sendToTrivia();
                         }
 
                         // ...
-                    }
-                });
-
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithEmail:failure", task.getException());
-                            createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
-
-                        }
                     }
                 });
 
@@ -171,11 +154,21 @@ public class SignupActivity extends AppCompatActivity {
                     public void run() {
                         // On complete call either onSignupSuccess or onSignupFailed
                         // depending on success
-                        onSignupSuccess();
-                        // onSignupFailed();
                         progressDialog.dismiss();
                     }
                 }, 3000);
+    }
+
+    /**
+     * Create a progress dialog
+     * @param message Message to be displayed
+     */
+    public void createProgressDialog(int message) {
+        progressDialog = new ProgressDialog(SignupActivity.this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.setMessage(String.format(getString(message)));
+        progressDialog.show();
     }
 
     /**
@@ -197,15 +190,23 @@ public class SignupActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Sends to Main Activity
+     */
+    public void sendToTrivia() {
+        Intent intent = new Intent(getApplicationContext(), Trivia.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
+    }
+
     public void onSignupSuccess() {
-        _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
         finish();
     }
 
     public void onSignupFailed() {
         createToast(R.string.login_failed, Toast.LENGTH_LONG);
-        _signupButton.setEnabled(true);
     }
 
     public boolean validate() {
@@ -229,7 +230,7 @@ public class SignupActivity extends AppCompatActivity {
             _emailText.setError(null);
         }
 
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
+        if (password.isEmpty() || password.length() < 6) {
             _passwordText.setError(getStringFromID(R.string.alphanumeric_error));
             valid = false;
         } else {

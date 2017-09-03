@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "383797104405-mhit73u26djrvq0rl0d7f9vf0qgg6tg0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.github.iamutkarshtiwari.trivia",
+            "certificate_hash": "85b3c8d0afd9786a53ae22dc1d23a604b37fef5c"
+          }
+        },
+        {
           "client_id": "383797104405-bn9te7oupgo6itrfi0el5abta1ofkuqk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

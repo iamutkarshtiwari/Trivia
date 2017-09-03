@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -79,14 +80,8 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             }
         });
 
-
-
         // Button listeners
         findViewById(R.id.google_login).setOnClickListener(this);
-
-
-
-
 
         // [START config_signin]
         // Configure Google Sign In
@@ -123,11 +118,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
 
     }
 
-
-
-
-
-
     // [START on_start_check_user]
     @Override
     public void onStart() {
@@ -158,7 +148,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
             } else {
-                createToast(R.string.login_failed, Toast.LENGTH_SHORT);
+                createToast(R.string.signin_failed, Toast.LENGTH_SHORT);
             }
         } else if (requestCode == RC_SIGN_OUT) {
             createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
@@ -172,7 +162,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
         createProgressDialog(R.string.authenticating);
-        progressDialog.show();
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -183,7 +172,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            sentToTrivia();
+                            sendToTrivia();
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -199,30 +188,17 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     }
     // [END auth_with_google]
 
-//    public Bundle createBundle(final GoogleSignInAccount acct) {
 
-
-//        String personName = acct.getDisplayName();
-////        String personGivenName = acct.getGivenName();
-////        String personFamilyName = acct.getFamilyName();
-//        String personEmail = acct.getEmail();
-//        String personId = acct.getId();
-//        Uri personPhoto = acct.getPhotoUrl();
-//        Bundle bundle = new Bundle();
-//        bundle.putString(“name"", personName);
-//        bundle.putString(“email”, personEmail);
-//        bundle.put (“photoURI”, personPhoto);
-////        i.putExtras(bundle);
-//        return bundle;
-//    }
-
-    private void sendToSignup() {
+    public void sendToSignup() {
         Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
         startActivityForResult(intent, RC_SIGN_UP);
     }
 
-    protected void sentToTrivia() {
-        Intent intent = new Intent(LoginActivity.this, Trivia.class);
+    /**
+     * Sends to Main Activity
+     */
+    public void sendToTrivia() {
+        Intent intent = new Intent(getApplicationContext(), Trivia.class);
         startActivity(intent);
         finish();
     }
@@ -277,11 +253,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         if (i == R.id.google_login) {
             signIn();
         }
-//        } else if (i == R.id.sign_out_button) {
-//            signOut();
-//        } else if (i == R.id.disconnect_button) {
-//            revokeAccess();
-//        }
     }
 
 
@@ -294,6 +265,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         progressDialog.setIndeterminate(true);
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.setMessage(String.format(getString(message)));
+        progressDialog.show();
     }
 
     /**
@@ -319,7 +291,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         _loginButton.setEnabled(false);
 
         createProgressDialog(R.string.authenticating);
-        progressDialog.show();
 
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
@@ -338,9 +309,10 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                         if (!task.isSuccessful()) {
                             Log.w(TAG, "signInWithEmail:failed", task.getException());
                             createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
+                        } else {
+                            progressDialog.dismiss();
+                            sendToTrivia();
                         }
-
-                        // ...
                     }
                 });
 
@@ -348,8 +320,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 new Runnable() {
                     public void run() {
                         // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
                         progressDialog.dismiss();
                     }
                 }, 3000);
@@ -378,14 +348,11 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     }
 
     public void onLoginSuccess() {
-        _loginButton.setEnabled(true);
         finish();
     }
 
     public void onLoginFailed() {
         createToast(R.string.login_failed, Toast.LENGTH_LONG);
-
-        _loginButton.setEnabled(true);
     }
 
     public boolean validate() {

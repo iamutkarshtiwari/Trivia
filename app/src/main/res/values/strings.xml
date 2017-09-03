@@ -37,6 +37,7 @@
     <string name="type">Type</string>
     <string name="logout">Logout</string>
     <string name="login_failed">Login failed</string>
+    <string name="signin_failed">SignIn failed</string>
     <string name="authentication_failed">Authentication failed</string>
     <string name="google_services_error">Google Play Services error</string>
     <string name="wanna_logout">"Do you want to logout?"</string>
@@ -49,6 +50,6 @@
     <string name="android_studio">Android Studio</string>
     <string name="android_studio_email">android.studio@android.com</string>
     <string name="profile_image_error">Profile image could not be loaded</string>
-
+    <string name="image_download_error">Failed to download the image</string>
 
 </resources>
