@@ -1,18 +1,16 @@
 package io.github.iamutkarshtiwari.trivia;
 
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -23,7 +21,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.app.AlertDialog;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,14 +40,19 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.squareup.picasso.Picasso;
+import com.wang.avi.AVLoadingIndicatorView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,7 +60,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class Trivia extends AppCompatActivity
-        implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener {
+        implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener,
+        View.OnClickListener {
 
 
     private static final String TAG = "MainActivity";
@@ -105,9 +111,18 @@ public class Trivia extends AppCompatActivity
 
         FirebaseUser user = mAuth.getCurrentUser();
 
+
+        // Next question
+        LinearLayout app_layer = (LinearLayout) findViewById (R.id.next_question);
+        app_layer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nextQuestion();
+            }
+        });
+
         // If user logged in
         if (user != null) {
-
 
             editor.putString("user_email", user.getEmail());
             editor.commit();
@@ -161,10 +176,173 @@ public class Trivia extends AppCompatActivity
                 Log.e("Image ERROR: ", Log.getStackTraceString(e));
             }
 
-
         }
 
+        nextQuestion();
 
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId()) {
+
+//            case R.id.next_question:
+//                break;
+
+//            case R.id.twoButton:
+//                // do your code
+//                break;
+//
+//            case R.id.threeButton:
+//                // do your code
+//                break;
+
+            default:
+                break;
+        }
+    }
+
+    public void nextQuestion() {
+
+        Log.e("Next question", "");
+
+        final String url = "https://opentdb.com/api.php?amount=1&type=multiple";
+
+        new HttpGetRequest().execute(url);
+
+
+    }
+
+    void processValue(JSONObject jsonObject)
+    {
+
+        String question = "";
+        String category = "";
+        ArrayList<String> options = new ArrayList<>();
+        try {
+
+            Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
+            question = jsonObject.getJSONArray("results").getJSONObject(0).getString("question");
+            category = jsonObject.getJSONArray("results").getJSONObject(0).getString("category");
+            options.add(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer"));
+            for (int i = 1; i < 4; i++) {
+                options.add(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i-1));
+            }
+            Collections.shuffle(options);
+
+        } catch (JSONException e) {
+            Log.e("ERROR: ", "Could not parse question");
+        }
+
+        TextView questionView = (TextView) findViewById(R.id.question);
+        questionView.setText(question);
+
+        TextView categoryView = (TextView) findViewById(R.id.category);
+        categoryView.setText(category);
+
+        for (int i = 0; i < 4; i++) {
+            String optionID = "option" + (i + 1);
+            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+            TextView option = (TextView) findViewById(resID);
+            option.setText(options.get(i));
+        }
+    }
+
+
+    public void changeQuestionDetailsBGColor(int color) {
+        RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
+//        questionPanel.setAlpha(alpha);
+//        questionPanel.setBackgroundColor;
+
+        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
+//        optionPanel.setAlpha(alpha);
+        optionPanel.setBackgroundColor(color);
+
+    }
+
+    /**
+     * Disable clicks on this view
+     * @param view of which clicks are to be disabled
+     */
+    public void disableTouch(View view) {
+        view.setClickable(false);
+    }
+
+    /**
+     * Enable clicks on this view
+     * @param view of which clicks are to be enabled
+     */
+    public void enableTouch(View view) {
+        view.setClickable(true);
+    }
+
+
+    public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
+        public static final String REQUEST_METHOD = "GET";
+        public static final int READ_TIMEOUT = 15000;
+        public static final int CONNECTION_TIMEOUT = 15000;
+        AVLoadingIndicatorView spinner;
+        @Override
+        protected void onPreExecute() {
+            spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
+            spinner.setVisibility(View.VISIBLE);
+            disableTouch(findViewById(R.id.next_question));
+//            changeQuestionDetailsBGColor(R.color.questionPanelDim);
+        }
+
+        @Override
+        protected JSONObject doInBackground(String... params){
+            String stringUrl = params[0];
+            String result;
+            String inputLine;
+            JSONObject jsonObject;
+            try {
+                //Create a URL object holding our url
+                URL myUrl = new URL(stringUrl);
+                //Create a connection
+                HttpURLConnection connection =(HttpURLConnection)
+                        myUrl.openConnection();
+                //Set methods and timeouts
+                connection.setRequestMethod(REQUEST_METHOD);
+                connection.setReadTimeout(READ_TIMEOUT);
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+
+                //Connect to our url
+                connection.connect();
+                //Create a new InputStreamReader
+                InputStreamReader streamReader = new
+                        InputStreamReader(connection.getInputStream());
+                //Create a new buffered reader and String Builder
+                BufferedReader reader = new BufferedReader(streamReader);
+                StringBuilder stringBuilder = new StringBuilder();
+                //Check if the line we are reading is not null
+                while((inputLine = reader.readLine()) != null){
+                    stringBuilder.append(inputLine);
+                }
+                //Close our InputStream and Buffered reader
+                reader.close();
+                streamReader.close();
+                //Set our result equal to our stringBuilder
+                result = stringBuilder.toString();
+                jsonObject = new JSONObject(result);
+
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                result = null;
+                jsonObject = null;
+            }
+            return jsonObject;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject result){
+            spinner.setVisibility(View.INVISIBLE);
+            processValue(result);
+            enableTouch(findViewById(R.id.next_question));
+//            changeQuestionDetailsBGColor(R.color.white);
+        }
     }
 
     @Override
@@ -177,8 +355,9 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Toast creator
+     *
      * @param messageID Message to be shown
-     * @param length Toast duration
+     * @param length    Toast duration
      */
     public void createToast(int messageID, int length) {
         Toast.makeText(getApplicationContext(), String.format(getString(messageID)), length).show();
@@ -315,6 +494,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Gets string from ID
+     *
      * @param ID string ID
      * @return String value
      */
@@ -331,6 +511,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Converts bitmap image to base64
+     *
      * @param img bitmap image
      * @return encoded base64 string
      */
@@ -347,6 +528,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Gets bitmap image from base64 string
+     *
      * @param input base64 string
      * @return Bitmap image
      */
@@ -367,8 +549,6 @@ public class Trivia extends AppCompatActivity
         @Override
         protected void onPreExecute() {
             Log.i("Async-Example", "onPreExecute Called");
-//            simpleWaitDialog = ProgressDialog.show(ImageDownladerActivity.this,
-//                    "Wait", "Downloading Image");
 
         }
 
@@ -394,7 +574,7 @@ public class Trivia extends AppCompatActivity
 
             try {
                 url = new URL(photoUrl);
-                connection = (HttpURLConnection)url.openConnection();
+                connection = (HttpURLConnection) url.openConnection();
             } catch (Exception e) {
                 Log.w("ImageDownloadError", getStringFromID(R.string.image_download_error));
                 return null;

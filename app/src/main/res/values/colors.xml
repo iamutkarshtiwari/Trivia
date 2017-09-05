@@ -14,5 +14,6 @@
     <color name="firstOption">#874FCC</color>
     <color name="secondOption">#5CC4C3</color>
     <color name="thirdOption">#F06970</color>
+    <color name="questionPanelDim">#F2F3F5</color>
 
 </resources>

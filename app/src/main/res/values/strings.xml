@@ -51,5 +51,9 @@
     <string name="android_studio_email">android.studio@android.com</string>
     <string name="profile_image_error">Profile image could not be loaded</string>
     <string name="image_download_error">Failed to download the image</string>
+    <string name="option1">Option 1</string>
+    <string name="option2">Option 2</string>
+    <string name="option3">Option 3</string>
+    <string name="option4">Option 4</string>
 
 </resources>
