@@ -6,11 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -44,6 +48,8 @@ import com.wang.avi.AVLoadingIndicatorView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -73,7 +79,6 @@ public class Trivia extends AppCompatActivity
     private NavigationView navigationView;
     private DatabaseReference mDatabase;
     private GoogleApiClient mGoogleApiClient;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +118,7 @@ public class Trivia extends AppCompatActivity
 
 
         // Next question
-        LinearLayout app_layer = (LinearLayout) findViewById (R.id.next_question);
+        LinearLayout app_layer = (LinearLayout) findViewById(R.id.next_question);
         app_layer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -185,81 +190,117 @@ public class Trivia extends AppCompatActivity
     @Override
     public void onClick(View v) {
 
-        switch (v.getId()) {
-
-//            case R.id.next_question:
-//                break;
-
-//            case R.id.twoButton:
-//                // do your code
-//                break;
+//        switch (v.getId()) {
 //
-//            case R.id.threeButton:
-//                // do your code
+////            case R.id.next_question:
+////                break;
+//
+////            case R.id.twoButton:
+////                // do your code
+////                break;
+////
+////            case R.id.threeButton:
+////                // do your code
+////                break;
+//
+//            default:
 //                break;
-
-            default:
-                break;
-        }
+//        }
     }
 
     public void nextQuestion() {
-
-        Log.e("Next question", "");
-
+        toggleNetworkMessage(View.INVISIBLE);
+        toggleQuestionDetailsVisibilty(View.INVISIBLE);
+        findViewById(R.id.category).setVisibility(View.INVISIBLE);
         final String url = "https://opentdb.com/api.php?amount=1&type=multiple";
-
         new HttpGetRequest().execute(url);
-
-
     }
 
-    void processValue(JSONObject jsonObject)
-    {
+    void processValue(JSONObject jsonObject) {
+        if (jsonObject != null) {
+            String question = "";
+            String category = "";
+            ArrayList<String> options = new ArrayList<>();
+            try {
+                Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
+                question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
+                category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
+                options.add(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer"));
+                for (int i = 1; i < 4; i++) {
+                    options.add(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1));
+                }
+                Collections.shuffle(options);
 
-        String question = "";
-        String category = "";
-        ArrayList<String> options = new ArrayList<>();
-        try {
-
-            Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
-            question = jsonObject.getJSONArray("results").getJSONObject(0).getString("question");
-            category = jsonObject.getJSONArray("results").getJSONObject(0).getString("category");
-            options.add(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer"));
-            for (int i = 1; i < 4; i++) {
-                options.add(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i-1));
+            } catch (JSONException e) {
+                Log.e("ERROR: ", "Could not parse question");
+                return;
             }
-            Collections.shuffle(options);
 
-        } catch (JSONException e) {
-            Log.e("ERROR: ", "Could not parse question");
-        }
+            TextView questionView = (TextView) findViewById(R.id.question);
+            questionView.setText(question);
 
-        TextView questionView = (TextView) findViewById(R.id.question);
-        questionView.setText(question);
+            TextView categoryView = (TextView) findViewById(R.id.category);
+            categoryView.setText(category);
 
-        TextView categoryView = (TextView) findViewById(R.id.category);
-        categoryView.setText(category);
+            for (int i = 0; i < 4; i++) {
+                String optionID = "option" + (i + 1);
+                int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+                TextView option = (TextView) findViewById(resID);
+                option.setText(Jsoup.parse(options.get(i)).text());
+            }
 
-        for (int i = 0; i < 4; i++) {
-            String optionID = "option" + (i + 1);
-            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
-            TextView option = (TextView) findViewById(resID);
-            option.setText(options.get(i));
+            // Display question details
+            toggleNetworkMessage(View.INVISIBLE);
+            toggleQuestionPanelVisibilty(View.VISIBLE);
+            toggleQuestionDetailsVisibilty(View.VISIBLE);
+            findViewById(R.id.category).setVisibility(View.VISIBLE);
+
+        } else {
+            // Hide question-option panels
+            toggleQuestionPanelVisibilty(View.INVISIBLE);
+            toggleNetworkMessage(View.VISIBLE);
         }
     }
 
 
-    public void changeQuestionDetailsBGColor(int color) {
+    public void fadeQuestionDetails(boolean flag) {
         RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
 //        questionPanel.setAlpha(alpha);
 //        questionPanel.setBackgroundColor;
 
         TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
 //        optionPanel.setAlpha(alpha);
-        optionPanel.setBackgroundColor(color);
+//        optionPanel.setBackgroundColor(color);
+
+//        Drawable mDrawable = ContextCompat.getDrawable(this, R.drawable.questions_bg);
+//        mDrawable.setColorFilter(new PorterDuffColorFilter(getColor(R.color.black), PorterDuff.Mode.MULTIPLY));
+//
 
     }
+
+    public void toggleNetworkMessage(int flag) {
+        TextView networkText = ((TextView) findViewById(R.id.network_issue));
+        networkText.setVisibility(flag);
+    }
+
+
+    public void toggleQuestionPanelVisibilty(int flag) {
+
+        RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
+        questionPanel.setVisibility(flag);
+
+        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
+        optionPanel.setVisibility(flag);
+    }
+
+    public void toggleQuestionDetailsVisibilty(int flag) {
+        findViewById(R.id.question).setVisibility(flag);
+        findViewById(R.id.option1).setVisibility(flag);
+        findViewById(R.id.option2).setVisibility(flag);
+        findViewById(R.id.option3).setVisibility(flag);
+        findViewById(R.id.option4).setVisibility(flag);
+    }
+
 
     /**
      * Disable clicks on this view
@@ -280,8 +321,9 @@ public class Trivia extends AppCompatActivity
 
     public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
         public static final String REQUEST_METHOD = "GET";
-        public static final int READ_TIMEOUT = 15000;
-        public static final int CONNECTION_TIMEOUT = 15000;
+        public static final int READ_TIMEOUT = 10000;
+        public static final int CONNECTION_TIMEOUT = 10000;
+        TextView networkText;
         AVLoadingIndicatorView spinner;
         @Override
         protected void onPreExecute() {
@@ -296,7 +338,7 @@ public class Trivia extends AppCompatActivity
             String stringUrl = params[0];
             String result;
             String inputLine;
-            JSONObject jsonObject;
+            JSONObject jsonObject = null;
             try {
                 //Create a URL object holding our url
                 URL myUrl = new URL(stringUrl);
@@ -310,27 +352,35 @@ public class Trivia extends AppCompatActivity
 
                 //Connect to our url
                 connection.connect();
-                //Create a new InputStreamReader
-                InputStreamReader streamReader = new
-                        InputStreamReader(connection.getInputStream());
-                //Create a new buffered reader and String Builder
-                BufferedReader reader = new BufferedReader(streamReader);
-                StringBuilder stringBuilder = new StringBuilder();
-                //Check if the line we are reading is not null
-                while((inputLine = reader.readLine()) != null){
-                    stringBuilder.append(inputLine);
+                int responseCode = connection.getResponseCode();
+
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    //Create a new InputStreamReader
+                    InputStreamReader streamReader = new
+                            InputStreamReader(connection.getInputStream(), "UTF-8");
+                    //Create a new buffered reader and String Builder
+                    BufferedReader reader = new BufferedReader(streamReader);
+                    StringBuilder stringBuilder = new StringBuilder();
+                    //Check if the line we are reading is not null
+                    while ((inputLine = reader.readLine()) != null) {
+                        stringBuilder.append(inputLine);
+                        Log.e("FETCHING ", inputLine);
+                    }
+                    //Close our InputStream and Buffered reader
+                    reader.close();
+                    streamReader.close();
+                    //Set our result equal to our stringBuilder
+                    result = stringBuilder.toString();
+                    jsonObject = new JSONObject(result);
+
+                } else {
+                    jsonObject = null;
                 }
-                //Close our InputStream and Buffered reader
-                reader.close();
-                streamReader.close();
-                //Set our result equal to our stringBuilder
-                result = stringBuilder.toString();
-                jsonObject = new JSONObject(result);
 
             }
             catch(Exception e){
-                e.printStackTrace();
-                result = null;
+                Log.e("ERROR :", "Error connecting to network");
                 jsonObject = null;
             }
             return jsonObject;
