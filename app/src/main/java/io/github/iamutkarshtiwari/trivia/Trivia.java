@@ -261,7 +261,7 @@ public class Trivia extends AppCompatActivity
         }
 
         // Disable clicks on option until further set of questions
-        disableClickOnOptions(true);
+        enableClickOnOptions(false);
 
     }
 
@@ -319,7 +319,7 @@ public class Trivia extends AppCompatActivity
             toggleNetworkMessage(View.INVISIBLE);
             toggleQuestionPanelVisibilty(View.VISIBLE);
             toggleQuestionDetailsVisibilty(View.VISIBLE);
-            disableClickOnOptions(false);
+            enableClickOnOptions(true);
             findViewById(R.id.category).setVisibility(View.VISIBLE);
 
         } else {
@@ -369,9 +369,14 @@ public class Trivia extends AppCompatActivity
      * Disables clicks on options until next set of question
      * @param flag to toggle click listener
      */
-    public void disableClickOnOptions(boolean flag) {
-        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
-        optionPanel.setEnabled(!flag);
+    public void enableClickOnOptions(boolean flag) {
+        for (int i = 0; i < 4; i++) {
+            String optionID = "option" + (i + 1);
+            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+            View includedLayout = findViewById(resID);
+            Button option = (Button) includedLayout.findViewById(R.id.option);
+            option.setClickable(flag);
+        }
     }
 
     /**
