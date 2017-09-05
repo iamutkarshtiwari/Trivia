@@ -10,7 +10,8 @@
     <color name="black">#000000</color>
     <color name="colorPrimaryLight">#C5CAE9</color>
     <color name="textBlack">#2F3C44</color>
-    <color name="whiteGray">#E4E7EC</color>
+    <color name="optionBackground">#E4E7EB</color>
+    <color name="dimOptions">#F2F3F5</color>
     <color name="firstOption">#874FCC</color>
     <color name="secondOption">#5CC4C3</color>
     <color name="thirdOption">#F06970</color>

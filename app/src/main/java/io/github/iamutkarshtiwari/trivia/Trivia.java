@@ -25,6 +25,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
@@ -72,6 +74,8 @@ public class Trivia extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
+    private static String correctOption = "";
+    private static ArrayList<String> options = new ArrayList<>();
 
     private FirebaseAuth mAuth;
     private SharedPreferences pref;
@@ -183,35 +187,89 @@ public class Trivia extends AppCompatActivity
 
         }
 
+        // Load a question on start
         nextQuestion();
+
+        // Attach listeners to option buttons
+        for (int i = 0; i < 4; i++) {
+            String optionID = "option" + (i + 1);
+            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+
+            View includedLayout = findViewById(resID);
+            Button option = (Button)includedLayout.findViewById(R.id.option);
+            option.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Send clicks to class listener
+                    checkAnswer(v);
+                }
+            });
+        }
 
     }
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View view) {
 
+        Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
 //        switch (v.getId()) {
 //
-////            case R.id.next_question:
-////                break;
+//            case R.id.next_question:
+//                break;
 //
-////            case R.id.twoButton:
-////                // do your code
-////                break;
-////
-////            case R.id.threeButton:
-////                // do your code
-////                break;
+//            case R.id.twoButton:
+//                // do your code
+//                break;
+//
+//            case R.id.threeButton:
+//                // do your code
+//                break;
 //
 //            default:
 //                break;
 //        }
     }
 
+    public void checkAnswer(View view) {
+        Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
+        Button input = (Button) view;
+        String pressedOption = input.getText().toString();
+
+        int index = 1;
+        for (String option: options) {
+            int resID = getResources().getIdentifier("option" + index, "id", getPackageName());
+            View includedLayout = findViewById(resID);
+
+            Button optionButton = (Button)includedLayout.findViewById(R.id.option);
+            ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+            // If pressed option
+            if (option.equalsIgnoreCase(pressedOption)) {
+                symbol.setVisibility(View.VISIBLE);
+                // If wrong option
+                if (!option.equalsIgnoreCase(correctOption)) {
+                    symbol.setImageDrawable(getResources().getDrawable(R.drawable.wrong));
+                }
+
+            }
+            if (option.equalsIgnoreCase(correctOption)) {
+                symbol.setVisibility(View.VISIBLE);
+                symbol.setImageDrawable(getResources().getDrawable(R.drawable.right));
+            } else {
+                includedLayout.setAlpha(0.5f);
+            }
+            index++;
+        }
+
+        // Disable clicks on option until further set of questions
+        disableClickOnOptions(true);
+
+    }
+
     public void nextQuestion() {
         toggleNetworkMessage(View.INVISIBLE);
         toggleQuestionDetailsVisibilty(View.INVISIBLE);
         findViewById(R.id.category).setVisibility(View.INVISIBLE);
+        resetOptionAlpha();
         final String url = "https://opentdb.com/api.php?amount=1&type=multiple";
         new HttpGetRequest().execute(url);
     }
@@ -220,12 +278,13 @@ public class Trivia extends AppCompatActivity
         if (jsonObject != null) {
             String question = "";
             String category = "";
-            ArrayList<String> options = new ArrayList<>();
+            options = new ArrayList<>();
             try {
                 Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
                 question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
                 category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
-                options.add(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer"));
+                correctOption = jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer");
+                options.add(correctOption);
                 for (int i = 1; i < 4; i++) {
                     options.add(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1));
                 }
@@ -245,14 +304,22 @@ public class Trivia extends AppCompatActivity
             for (int i = 0; i < 4; i++) {
                 String optionID = "option" + (i + 1);
                 int resID = getResources().getIdentifier(optionID, "id", getPackageName());
-                TextView option = (TextView) findViewById(resID);
+
+                View includedLayout = findViewById(resID);
+                Button option = (Button)includedLayout.findViewById(R.id.option);
                 option.setText(Jsoup.parse(options.get(i)).text());
+                // Fix the alpha from previous answer result
+                option.setAlpha(1.0f);
+
+                ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                symbol.setVisibility(View.INVISIBLE);
             }
 
             // Display question details
             toggleNetworkMessage(View.INVISIBLE);
             toggleQuestionPanelVisibilty(View.VISIBLE);
             toggleQuestionDetailsVisibilty(View.VISIBLE);
+            disableClickOnOptions(false);
             findViewById(R.id.category).setVisibility(View.VISIBLE);
 
         } else {
@@ -263,27 +330,32 @@ public class Trivia extends AppCompatActivity
     }
 
 
-    public void fadeQuestionDetails(boolean flag) {
-        RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
-//        questionPanel.setAlpha(alpha);
-//        questionPanel.setBackgroundColor;
-
-        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
-//        optionPanel.setAlpha(alpha);
-//        optionPanel.setBackgroundColor(color);
-
-//        Drawable mDrawable = ContextCompat.getDrawable(this, R.drawable.questions_bg);
-//        mDrawable.setColorFilter(new PorterDuffColorFilter(getColor(R.color.black), PorterDuff.Mode.MULTIPLY));
-//
-
+    /**
+     * Resets alpha values of options to default
+     */
+    public void resetOptionAlpha() {
+        for (int i = 0; i < 4; i++) {
+            String optionID = "option" + (i + 1);
+            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+            View includedLayout = findViewById(resID);
+            includedLayout.setAlpha(1.0f);
+        }
     }
 
+    /**
+     * Toggels the network error message
+     * @param flag to toggle visibility
+     */
     public void toggleNetworkMessage(int flag) {
         TextView networkText = ((TextView) findViewById(R.id.network_issue));
         networkText.setVisibility(flag);
     }
 
 
+    /**
+     * Toggles Question + Options's visibility
+     * @param flag to toggle visibility
+     */
     public void toggleQuestionPanelVisibilty(int flag) {
 
         RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
@@ -293,6 +365,19 @@ public class Trivia extends AppCompatActivity
         optionPanel.setVisibility(flag);
     }
 
+    /**
+     * Disables clicks on options until next set of question
+     * @param flag to toggle click listener
+     */
+    public void disableClickOnOptions(boolean flag) {
+        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
+        optionPanel.setEnabled(!flag);
+    }
+
+    /**
+     * Toggles Question + Options text visibility
+     * @param flag to toggle visibility
+     */
     public void toggleQuestionDetailsVisibilty(int flag) {
         findViewById(R.id.question).setVisibility(flag);
         findViewById(R.id.option1).setVisibility(flag);
@@ -319,6 +404,9 @@ public class Trivia extends AppCompatActivity
     }
 
 
+    /**
+     * Asyncronous class to make HTTP request to Trivia questions API
+     */
     public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
         public static final String REQUEST_METHOD = "GET";
         public static final int READ_TIMEOUT = 10000;
@@ -365,7 +453,6 @@ public class Trivia extends AppCompatActivity
                     //Check if the line we are reading is not null
                     while ((inputLine = reader.readLine()) != null) {
                         stringBuilder.append(inputLine);
-                        Log.e("FETCHING ", inputLine);
                     }
                     //Close our InputStream and Buffered reader
                     reader.close();

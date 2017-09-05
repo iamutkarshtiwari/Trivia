@@ -35,6 +35,7 @@
     <string name="categories">Categories</string>
     <string name="difficulty">Difficulty</string>
     <string name="type">Type</string>
+    <string name="leaderboard">Leaderboard</string>
     <string name="logout">Logout</string>
     <string name="login_failed">Login failed</string>
     <string name="signin_failed">SignIn failed</string>

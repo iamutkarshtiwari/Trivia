@@ -7,6 +7,10 @@
             android:icon="@drawable/ic_user"
             android:title="@string/profile" />
         <item
+            android:id="@+id/nav_leaderboard"
+            android:icon="@drawable/ic_leaderboard"
+            android:title="@string/leaderboard" />
+        <item
             android:id="@+id/nav_category"
             android:icon="@drawable/ic_category"
             android:title="@string/categories" />
