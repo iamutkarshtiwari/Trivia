@@ -74,6 +74,7 @@ public class Trivia extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
+    private static final int RC_CATEGORY = 9003;
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
 
@@ -206,6 +207,11 @@ public class Trivia extends AppCompatActivity
             });
         }
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -557,7 +563,11 @@ public class Trivia extends AppCompatActivity
 
         if (id == R.id.nav_profile) {
             // Handle the camera action
+        } else if (id == R.id.nav_leaderboard) {
+
         } else if (id == R.id.nav_category) {
+            Intent intent = new Intent(getApplicationContext(), Category.class);
+            startActivityForResult(intent, RC_CATEGORY);
 
         } else if (id == R.id.nav_type) {
 

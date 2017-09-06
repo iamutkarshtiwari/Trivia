@@ -134,7 +134,7 @@
             style="@style/AVLoadingIndicatorView.Small"
             android:visibility="visible"
             android:elevation="2dp"
-            app:indicatorName="BallClipRotatePulseIndicator"
+            app:indicatorName="LineScalePulseOutIndicator"
             app:indicatorColor="@color/black"
             android:layout_marginTop="64dp"
             android:layout_below="@id/question_panel"
