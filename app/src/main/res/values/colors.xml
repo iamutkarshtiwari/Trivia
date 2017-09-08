@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#8D44AD</color>
-    <color name="colorPrimaryDark">#783D91</color>
+    <color name="colorPrimary">#9C27B0</color>
+    <color name="colorPrimaryDark">#7B1FA2</color>
     <color name="colorAccent">#baa0e7</color>
-    <color name="startGradient">#ffA770EF</color>
+    <color name="startGradient">#6A82FB</color>
     <color name="centreGradient">#ffCF8BF3</color>
-    <color name="endGradient">#ffFDB99B</color>
+    <color name="endGradient">#FC5C7D</color>
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
     <color name="colorPrimaryLight">#C5CAE9</color>

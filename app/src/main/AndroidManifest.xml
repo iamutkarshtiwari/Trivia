@@ -18,8 +18,11 @@
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/NoActionBar"
+            android:theme="@style/NoActionBarRegistration"
             android:windowSoftInputMode="adjustPan" />
+        <activity
+        android:name=".SignupActivity"
+        android:theme="@style/NoActionBarRegistration" />
         <activity
             android:name=".Trivia"
             android:label="@string/app_name"
@@ -30,9 +33,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".SignupActivity"
-            android:theme="@style/NoActionBar" />
         <activity
             android:name=".Category"
             android:label="Categories"

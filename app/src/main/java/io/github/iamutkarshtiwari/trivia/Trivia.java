@@ -75,6 +75,7 @@ public class Trivia extends AppCompatActivity
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
     private static final int RC_CATEGORY = 9003;
+    private static final String MY_PREFS_NAME = "Trivia";
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
 
@@ -116,7 +117,7 @@ public class Trivia extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = pref.edit();
 
         FirebaseUser user = mAuth.getCurrentUser();
@@ -500,7 +501,6 @@ public class Trivia extends AppCompatActivity
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
         createToast(R.string.google_services_error, Toast.LENGTH_SHORT);
     }
-
     /**
      * Toast creator
      *
