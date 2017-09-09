@@ -17,5 +17,7 @@
     <color name="thirdOption">#F06970</color>
     <color name="questionPanelDim">#F2F3F5</color>
     <color name="lightGray">#616161</color>
+    <color name="circularProgressBG">#472256</color>
+    <color name="circularProgressRadius">#8EB021</color>
 
 </resources>

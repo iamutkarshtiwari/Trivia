@@ -11,6 +11,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -25,9 +26,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -39,6 +43,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.firebase.auth.ActionCodeResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -51,6 +56,7 @@ import com.wang.avi.AVLoadingIndicatorView;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
+import org.w3c.dom.Text;
 
 
 import java.io.BufferedReader;
@@ -90,6 +96,9 @@ public class Trivia extends AppCompatActivity
     private DatabaseReference mDatabase;
     private GoogleApiClient mGoogleApiClient;
     private UserPrefs currentUserPrefs;
+    private ProgressBar countdownProgress;
+    private CountDownTimer countDownTimer;
+    private TextView progressValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +145,13 @@ public class Trivia extends AppCompatActivity
             }
         });
 
+
+        // Load the countdown timer
+        Animation an = new RotateAnimation(0.0f, 270.0f, 90f, 90f);
+        an.setFillAfter(true);
+        countdownProgress = (ProgressBar) findViewById(R.id.progressBar);
+        countdownProgress.startAnimation(an);
+        progressValue = (TextView) findViewById(R.id.progressValue);
 
 
         // Load a question on start
@@ -231,6 +247,13 @@ public class Trivia extends AppCompatActivity
         findViewById(R.id.category).setVisibility(View.INVISIBLE);
         resetOptionAlpha();
 
+        // Stop previous countdown timer
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countdownProgress.setProgress(0);
+            progressValue.setVisibility(View.INVISIBLE);
+        }
+
         String params = "";
         if (currentUserPrefs.getCategories().size() > 0) {
             params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
@@ -256,7 +279,11 @@ public class Trivia extends AppCompatActivity
     }
 
 
-    void processValue(JSONObject jsonObject) {
+    /**
+     * Parse the JSON response from triviaDB
+     * @param jsonObject containing the response
+     */
+    public void processValue(JSONObject jsonObject) {
         if (jsonObject != null) {
             String question = "";
             String category = "";
@@ -279,6 +306,9 @@ public class Trivia extends AppCompatActivity
 
             } catch (JSONException e) {
                 Log.e("ERROR: ", "Could not parse question");
+                // Hide question-option panels
+                toggleQuestionPanelVisibilty(View.INVISIBLE);
+                toggleNetworkMessage(View.VISIBLE);
                 return;
             }
 
@@ -309,11 +339,45 @@ public class Trivia extends AppCompatActivity
             enableClickOnOptions(true);
             findViewById(R.id.category).setVisibility(View.VISIBLE);
 
+            // Start countdown timer
+            countDownTimer = Timer(41);
+            countDownTimer.start();
+            progressValue.setVisibility(View.VISIBLE);
+
         } else {
             // Hide question-option panels
             toggleQuestionPanelVisibilty(View.INVISIBLE);
             toggleNetworkMessage(View.VISIBLE);
         }
+    }
+
+    /**
+     * Countdown timer for questions
+     * @param secs seconds
+     */
+    private CountDownTimer Timer(final int secs) {
+        return new CountDownTimer(secs * 1000, 1000) {
+            // 500 means, onTick function will be called at every 500 milliseconds
+
+            @Override
+            public void onTick(long leftTimeInMilliseconds) {
+                long seconds = leftTimeInMilliseconds / 1000;
+                countdownProgress.setProgress((int)seconds);
+                progressValue.setText(String.format("%d", seconds));
+                // format the textview to show the easily readable format
+
+            }
+            @Override
+            public void onFinish() {
+                // Move to next question
+                countdownProgress.setProgress(0);
+                progressValue.setText(String.format("%d", 0));
+                progressValue.setVisibility(View.INVISIBLE);
+//                View progressView = findViewById(R.id.circularProgressBar);
+//                progressView.setVisibility(View.INVISIBLE);
+                nextQuestion();
+            }
+        };
     }
 
 
@@ -813,5 +877,6 @@ public class Trivia extends AppCompatActivity
             return null;
         }
     }
+
 
 }

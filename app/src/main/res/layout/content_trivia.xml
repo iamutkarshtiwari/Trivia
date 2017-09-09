@@ -60,6 +60,42 @@
             android:text="5000"/>
 
 
+
+        <RelativeLayout
+            android:id="@+id/circularProgressBar"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_alignBottom="@id/imageView"
+            android:layout_marginRight="32dp"
+            android:layout_alignParentRight="true">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:indeterminate="false"
+                android:progress="75"
+                android:progressDrawable="@drawable/circular_progress_bg"/>
+
+            <TextView
+                android:id="@+id/progressValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text="10"
+                android:textStyle="bold"
+                android:textSize="18dp"
+                android:gravity="center"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                />
+        </RelativeLayout>
+
+
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="400dp"
@@ -71,7 +107,7 @@
 
         <RelativeLayout
             android:id="@+id/question_panel"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="170dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"

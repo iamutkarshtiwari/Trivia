@@ -20,14 +20,17 @@
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
             android:theme="@style/NoActionBarRegistration"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".SignupActivity"
-            android:theme="@style/NoActionBarRegistration" />
+            android:theme="@style/NoActionBarRegistration"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Trivia"
             android:label="@string/app_name"
-            android:theme="@style/NoActionBar">
+            android:theme="@style/NoActionBar"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,9 +40,11 @@
         <activity
             android:name=".Category"
             android:label="@string/categories"
-            android:theme="@style/NoActionBar" />
+            android:theme="@style/NoActionBar"
+            android:screenOrientation="portrait"/>
         <activity android:name=".Preferences"
-            android:label="@string/preferences"/>
+            android:label="@string/preferences"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
