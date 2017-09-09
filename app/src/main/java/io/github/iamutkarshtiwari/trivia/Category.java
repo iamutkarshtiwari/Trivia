@@ -171,7 +171,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get user value
                 User user = dataSnapshot.getValue(User.class);
-                Log.e("Firebase Fetch", user.getCategories());
+//                editor.putString("user_categories", user.getCategories());
                 loadedSelection.addAll(Arrays.asList(user.getCategories().split(",")));
                 stringBooleanToArrayBoolean(loadedSelection);
                 categoryAdapter.setCheckedSelections(stringBooleanToArrayBoolean(loadedSelection));

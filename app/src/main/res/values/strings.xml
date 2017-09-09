@@ -29,8 +29,8 @@
     <string name="no_account_yet">No account yet? Create one</string>
     <string name="login">Login</string>
     <string name="already_a_member">Already a member? Login</string>
-    <string name="authenticating">Authenticating&#183;&#183;&#183;</string>
-    <string name="creating_account">Creating account&#183;&#183;&#183;</string>
+    <string name="authenticating">Authenticating&#8230;</string>
+    <string name="creating_account">Creating account&#8230;</string>
     <string name="profile">Profile</string>
     <string name="categories">Categories</string>
     <string name="difficulty">Difficulty</string>
@@ -60,5 +60,7 @@
     <string name="loading_prefs">Loading preferences..</string>
     <string name="firebase_sync_error">Could not sync preferences with firebase</string>
     <string name="invite">Invite your friends</string>
+    <string name="save">Save</string>
+    <string name="loading_question">Loading next question&#8230;</string>
 
 </resources>

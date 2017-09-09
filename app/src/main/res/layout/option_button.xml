@@ -11,6 +11,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:textAllCaps="false"
+        android:padding="8dp"
         android:textSize="14sp"
         android:textStyle="normal"
         android:background="@drawable/questions_bg"/>

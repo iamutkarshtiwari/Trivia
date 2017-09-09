@@ -14,6 +14,52 @@
         android:layout_height="wrap_content"
         android:paddingTop="?attr/actionBarSize">
 
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/imageView"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/profile" />
+
+        <TextView
+            android:id="@+id/profileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="User"
+            android:layout_marginLeft="10dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_toRightOf="@id/imageView"
+            android:layout_alignTop="@id/imageView"
+            android:layout_marginTop="8dp"/>
+
+        <ImageView
+            android:id="@+id/star"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/star"
+            android:layout_below="@id/profileName"
+            android:layout_toRightOf="@id/imageView"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="4dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_toRightOf="@id/star"
+            android:layout_below="@id/profileName"
+            android:layout_marginLeft="4dp"
+            android:layout_marginTop="4dp"
+            android:text="5000"/>
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="400dp"
@@ -29,7 +75,7 @@
             android:layout_height="170dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:layout_marginTop="80dp"
+            android:layout_marginTop="90dp"
             android:background="@drawable/questions_bg"
             android:elevation="2dp">
 
@@ -137,6 +183,16 @@
             android:visibility="visible"
             app:indicatorColor="@color/black"
             app:indicatorName="LineScalePulseOutIndicator" />
+
+        <TextView
+            android:id="@+id/loading_question"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/loading_question"
+            android:elevation="2dp"
+            android:textColor="@color/black"
+            android:layout_below="@id/spinner"
+            android:layout_centerHorizontal="true"/>
 
         <TextView
             android:id="@+id/network_issue"

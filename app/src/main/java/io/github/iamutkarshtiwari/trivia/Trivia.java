@@ -62,10 +62,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import io.github.iamutkarshtiwari.trivia.models.User;
+import io.github.iamutkarshtiwari.trivia.models.UserPrefs;
 
 public class Trivia extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener,
@@ -80,12 +82,14 @@ public class Trivia extends AppCompatActivity
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
 
+
     private FirebaseAuth mAuth;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
     private NavigationView navigationView;
     private DatabaseReference mDatabase;
     private GoogleApiClient mGoogleApiClient;
+    private UserPrefs currentUserPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +106,6 @@ public class Trivia extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
 
         // Firebase instance
         mAuth = FirebaseAuth.getInstance();
@@ -121,8 +124,8 @@ public class Trivia extends AppCompatActivity
         pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = pref.edit();
 
-        FirebaseUser user = mAuth.getCurrentUser();
-
+        // Loads user prefs
+        loadPreferences();
 
         // Next question
         LinearLayout app_layer = (LinearLayout) findViewById(R.id.next_question);
@@ -133,62 +136,7 @@ public class Trivia extends AppCompatActivity
             }
         });
 
-        // If user logged in
-        if (user != null) {
 
-            editor.putString("user_email", user.getEmail());
-            editor.commit();
-
-            // Display user name and email in navigation header view
-            View navHeaderView = navigationView.getHeaderView(0);
-            final TextView userName = (TextView) navHeaderView.findViewById(R.id.name);
-
-            if (pref.getString("user_name", "").length() == 0) {
-                if (user.getDisplayName() != null) {
-                    editor.putString("user_name", user.getDisplayName());
-                    editor.commit();
-                    userName.setText(pref.getString("user_name", ""));
-                } else {
-                    // Fetch user's name from database
-                    mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            // Get user value
-                            User user = dataSnapshot.getValue(User.class);
-                            editor.putString("user_name", user.getName());
-                            editor.commit();
-                            userName.setText(pref.getString("user_name", ""));
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            Log.e("Firebase Database Error", "");
-                        }
-                    });
-                }
-            } else {
-                userName.setText(pref.getString("user_name", ""));
-            }
-
-            TextView userEmail = (TextView) navHeaderView.findViewById(R.id.email);
-            userEmail.setText(pref.getString("user_email", ""));
-
-            // Set user profile image
-            try {
-                if (pref.getString("user_image", "").length() == 0) {
-                    String photoURL = user.getPhotoUrl().toString();
-                    new ImageDownloader().execute(photoURL);
-                } else {
-                    CircleImageView profileImageView = (CircleImageView) navHeaderView.findViewById(R.id.imageView);
-                    profileImageView.setImageBitmap(
-                            decodeToBase64(pref.getString("user_image", "")));
-                }
-
-            } catch (Exception e) {
-                Log.e("Image ERROR: ", Log.getStackTraceString(e));
-            }
-
-        }
 
         // Load a question on start
         nextQuestion();
@@ -214,12 +162,14 @@ public class Trivia extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RC_CATEGORY) {
+            loadPreferences();
+        }
     }
 
     @Override
     public void onClick(View view) {
 
-        Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
 //        switch (v.getId()) {
 //
 //            case R.id.next_question:
@@ -237,6 +187,8 @@ public class Trivia extends AppCompatActivity
 //                break;
 //        }
     }
+
+
 
     public void checkAnswer(View view) {
         Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
@@ -278,9 +230,31 @@ public class Trivia extends AppCompatActivity
         toggleQuestionDetailsVisibilty(View.INVISIBLE);
         findViewById(R.id.category).setVisibility(View.INVISIBLE);
         resetOptionAlpha();
-        final String url = "https://opentdb.com/api.php?amount=1&type=multiple";
+
+        String params = "";
+        if (currentUserPrefs.getCategories().size() > 0) {
+            params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
+        }
+        params += "&type=multiple";
+
+        final String url = "https://opentdb.com/api.php?amount=1" + params;
         new HttpGetRequest().execute(url);
     }
+
+    /**
+     * Returns random item from passed ArrayList
+     * @param list list from which random item is picked
+     * @param <T> generic datatype
+     * @return random item from the list
+     */
+    private <T> T getRandomItem(ArrayList<T> list)
+    {
+        Random random = new Random();
+        int listSize = list.size();
+        int randomIndex = random.nextInt(listSize);
+        return list.get(randomIndex);
+    }
+
 
     void processValue(JSONObject jsonObject) {
         if (jsonObject != null) {
@@ -435,6 +409,7 @@ public class Trivia extends AppCompatActivity
         protected void onPreExecute() {
             spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
             spinner.setVisibility(View.VISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
             disableTouch(findViewById(R.id.next_question));
 //            changeQuestionDetailsBGColor(R.color.questionPanelDim);
         }
@@ -494,6 +469,7 @@ public class Trivia extends AppCompatActivity
         @Override
         protected void onPostExecute(JSONObject result){
             spinner.setVisibility(View.INVISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
             processValue(result);
             enableTouch(findViewById(R.id.next_question));
 //            changeQuestionDetailsBGColor(R.color.white);
@@ -526,6 +502,61 @@ public class Trivia extends AppCompatActivity
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             sendToLogin();
+        } else {
+            // Load user details
+            editor.putString("user_email", currentUser.getEmail());
+            editor.commit();
+
+            // Display user name and email in navigation header view
+            View navHeaderView = navigationView.getHeaderView(0);
+            final TextView userName = (TextView) navHeaderView.findViewById(R.id.name);
+
+            if (pref.getString("user_name", "").length() == 0) {
+                if (currentUser.getDisplayName() != null) {
+                    editor.putString("user_name", currentUser.getDisplayName());
+                    editor.commit();
+                    userName.setText(pref.getString("user_name", ""));
+                } else {
+                    // Fetch user's name from database
+                    mDatabase.child("users").child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            // Get user value
+                            User user = dataSnapshot.getValue(User.class);
+                            editor.putString("user_name", user.getName());
+                            editor.commit();
+                            userName.setText(pref.getString("user_name", ""));
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.e("Firebase Database Error", "");
+                        }
+                    });
+                }
+            } else {
+                userName.setText(pref.getString("user_name", ""));
+            }
+
+            TextView userEmail = (TextView) navHeaderView.findViewById(R.id.email);
+            userEmail.setText(pref.getString("user_email", ""));
+
+            // Set user profile image
+            try {
+                if (pref.getString("user_image", "").length() == 0) {
+                    String photoURL = currentUser.getPhotoUrl().toString();
+                    new ImageDownloader().execute(photoURL);
+                } else {
+                    CircleImageView profileImageView = (CircleImageView) navHeaderView.findViewById(R.id.imageView);
+                    CircleImageView playerImageView = (CircleImageView) findViewById(R.id.imageView);
+                    Bitmap image = decodeToBase64(pref.getString("user_image", ""));
+                    profileImageView.setImageBitmap(image);
+                    playerImageView.setImageBitmap(image);
+                }
+
+            } catch (Exception e) {
+                Log.e("Image ERROR: ", Log.getStackTraceString(e));
+            }
         }
     }
 
@@ -569,12 +600,13 @@ public class Trivia extends AppCompatActivity
 
         if (id == R.id.nav_profile) {
         } else if (id == R.id.nav_leaderboard) {
-            Intent intent = new Intent(getApplicationContext(), Preferences.class);
-            startActivityForResult(intent, RC_PREFERENCE);
         } else if (id == R.id.nav_category) {
             Intent intent = new Intent(getApplicationContext(), Category.class);
             startActivityForResult(intent, RC_CATEGORY);
 
+        } else if (id == R.id.nav_preferences) {
+            Intent intent = new Intent(getApplicationContext(), Preferences.class);
+            startActivityForResult(intent, RC_PREFERENCE);
         } else if (id == R.id.nav_logout) {
             // Confirmation alert
             AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
@@ -609,21 +641,30 @@ public class Trivia extends AppCompatActivity
         return false;
     }
 
+    public void loadPreferences() {
+        currentUserPrefs = new UserPrefs();
+
+        currentUserPrefs.setName(pref.getString("user_name", ""));
+        currentUserPrefs.setEmail(pref.getString("user_email", ""));
+        currentUserPrefs.setCategories(pref.getString("user_categories", ""));
+        currentUserPrefs.setDifficulty(pref.getString("user_difficulty", ""));
+        currentUserPrefs.setTypes(pref.getString("user_question_types", ""));
+
+
+    }
+
     public void clearPreferences() {
         editor.putString("user_name", "");
         editor.putString("user_email", "");
 
         // Clear difficulty choices
-        ArrayList<String> difficulty = new ArrayList<>();
-        Set<String> set = new HashSet<>();
-        set.addAll(difficulty);
-        editor.putStringSet("user_difficulty", set);
+        editor.putString("user_difficulty", "");
 
         // Clear category selections
-        ArrayList<String> categories = new ArrayList<>();
-        set = new HashSet<>();
-        set.addAll(categories);
-        editor.putStringSet("user_categories", set);
+        editor.putString("user_categories", "");
+
+        // Clear question types
+        editor.putString("user_question_types", "");
 
         // Clear image base64 string
         editor.putString("user_image", "");
@@ -710,8 +751,10 @@ public class Trivia extends AppCompatActivity
             Log.i("Async-Example", "onPostExecute Called");
             View navHeaderView = navigationView.getHeaderView(0);
             CircleImageView profileImageView = (CircleImageView) navHeaderView.findViewById(R.id.imageView);
+            CircleImageView playerImageView = (CircleImageView) findViewById(R.id.imageView);
             if (result != null) {
                 profileImageView.setImageBitmap(result);
+                playerImageView.setImageBitmap(result);
                 // Save in shared preferences
                 editor.putString("user_image", encodeToBase64(result));
                 editor.commit();
@@ -770,6 +813,5 @@ public class Trivia extends AppCompatActivity
             return null;
         }
     }
-
 
 }

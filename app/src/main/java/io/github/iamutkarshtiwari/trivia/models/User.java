@@ -8,11 +8,13 @@ import java.util.ArrayList;
 
 public class User {
     //name and address string
-    private String name;
-    private String email;
+    public String name;
+    public String email;
+    public float hotScore;
     private String difficulty;
     private String categories;
     private String types;
+
 
     public User() {
         /*
