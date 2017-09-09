@@ -75,6 +75,7 @@ public class Trivia extends AppCompatActivity
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
     private static final int RC_CATEGORY = 9003;
+    private static final int RC_PREFERENCE = 9004;
     private static final String MY_PREFS_NAME = "Trivia";
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
@@ -290,6 +291,11 @@ public class Trivia extends AppCompatActivity
                 Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
                 question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
                 category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
+                if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
+                    category = category.substring(15);
+                } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
+                    category = category.substring(9);
+                }
                 correctOption = jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer");
                 options.add(correctOption);
                 for (int i = 1; i < 4; i++) {
@@ -562,18 +568,13 @@ public class Trivia extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_profile) {
-            // Handle the camera action
         } else if (id == R.id.nav_leaderboard) {
-
+            Intent intent = new Intent(getApplicationContext(), Preferences.class);
+            startActivityForResult(intent, RC_PREFERENCE);
         } else if (id == R.id.nav_category) {
             Intent intent = new Intent(getApplicationContext(), Category.class);
             startActivityForResult(intent, RC_CATEGORY);
 
-        } else if (id == R.id.nav_type) {
-
-        } else if (id == R.id.nav_difficulty) {
-
-            return true;
         } else if (id == R.id.nav_logout) {
             // Confirmation alert
             AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);

@@ -57,6 +57,8 @@
     <string name="deselect_all">Deselect all</string>
     <string name="preferences">Preferences</string>
     <string name="share">Invite friends</string>
-
+    <string name="loading_prefs">Loading preferences..</string>
+    <string name="firebase_sync_error">Could not sync preferences with firebase</string>
+    <string name="invite">Invite your friends</string>
 
 </resources>

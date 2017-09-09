@@ -10,8 +10,9 @@ public class User {
     //name and address string
     private String name;
     private String email;
-    private ArrayList<String> difficulty;
-    private ArrayList<String> categories;
+    private String difficulty;
+    private String categories;
+    private String types;
 
     public User() {
         /*
@@ -36,19 +37,27 @@ public class User {
         this.email = address;
     }
 
-    public void setDifficulty(ArrayList<String> array) {
-        this.difficulty = new ArrayList<>(array);
+    public void setDifficulty(String diff) {
+        this.difficulty = diff;
     }
 
-    public ArrayList<String> getDifficulty() {
+    public String getDifficulty() {
         return difficulty;
     }
 
-    public void setCategories(ArrayList<String> array) {
-        this.categories = new ArrayList<>(array);
+    public void setCategories(String cat) {
+        this.categories = cat;
     }
 
-    public ArrayList<String> getCategories() {
+    public String getCategories() {
         return categories;
+    }
+
+    public void setTypes(String types) {
+        this.types = types;
+    }
+
+    public String getTypes() {
+        return types;
     }
 }

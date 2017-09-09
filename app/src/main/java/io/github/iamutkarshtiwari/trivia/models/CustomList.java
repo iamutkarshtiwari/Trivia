@@ -20,7 +20,6 @@ import io.github.iamutkarshtiwari.trivia.R;
 public class CustomList extends ArrayAdapter<String> {
 
     public boolean[] checkSelectionList;
-    private boolean areAllCategoriesSelected = false;
     private final Activity context;
     private final String[] names;
 
@@ -30,6 +29,14 @@ public class CustomList extends ArrayAdapter<String> {
         this.names = categoryNames;
         this.checkSelectionList = savedSelections;
 
+    }
+
+    /**
+     * Updates the selection boolean array
+     * @param array new boolean array
+     */
+    public void setCheckedSelections(boolean[] array) {
+        this.checkSelectionList = array;
     }
 
     /**/

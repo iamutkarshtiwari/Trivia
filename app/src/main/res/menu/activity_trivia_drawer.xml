@@ -15,14 +15,6 @@
             android:icon="@drawable/ic_category"
             android:title="@string/categories" />
         <item
-            android:id="@+id/nav_type"
-            android:icon="@drawable/ic_choice"
-            android:title="@string/type" />
-        <item
-            android:id="@+id/nav_difficulty"
-            android:icon="@drawable/ic_difficulty"
-            android:title="@string/difficulty" />
-        <item
             android:id="@+id/nav_preferences"
             android:icon="@drawable/ic_preferences"
             android:title="@string/preferences" />
@@ -33,7 +25,7 @@
             <item
                 android:id="@+id/nav_invite"
                 android:icon="@drawable/ic_share"
-                android:title="@string/logout" />
+                android:title="@string/invite" />
             <item
                 android:id="@+id/nav_logout"
                 android:icon="@drawable/ic_logout"

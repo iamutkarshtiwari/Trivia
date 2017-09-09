@@ -18,7 +18,6 @@
                 android:id="@+id/select_all"
                 android:layout_width="wrap_content"
                 android:layout_height="30dp"
-                android:text="@string/select_all"
                 android:textAllCaps="false"
                 android:layout_marginRight="8dp"
                 android:background="@drawable/select_all_bg"
