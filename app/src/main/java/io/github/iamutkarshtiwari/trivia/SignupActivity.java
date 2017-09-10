@@ -147,7 +147,9 @@ public class SignupActivity extends AppCompatActivity {
                         } else {
                             progressDialog.dismiss();
                             FirebaseUser user = mAuth.getCurrentUser();
-                            createUserInFirebase(name, email, user.getUid());
+                            if (mDatabase.child("users").child(user.getUid()) == null) {
+                                createUserInFirebase(name, email, user.getUid());
+                            }
                             sendToTrivia();
                         }
 

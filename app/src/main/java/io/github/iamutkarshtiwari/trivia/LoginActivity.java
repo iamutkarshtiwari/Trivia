@@ -173,7 +173,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            createUserInFirebase(user.getDisplayName(), user.getEmail(), user.getUid());
+                            if (mDatabase.child("users").child(user.getUid()) == null) {
+                                createUserInFirebase(user.getDisplayName(), user.getEmail(), user.getUid());
+                            }
                             sendToTrivia();
 
                         } else {

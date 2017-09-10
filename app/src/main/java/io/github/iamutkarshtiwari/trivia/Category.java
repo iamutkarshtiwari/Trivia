@@ -1,7 +1,10 @@
 package io.github.iamutkarshtiwari.trivia;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.ActionBar;
@@ -13,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -96,7 +100,9 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         int viewID = view.getId();
 
         if (viewID == R.id.save) {
-            saveCategoryPreferences();
+            String currentSelections = saveCategoryPreferences();
+            syncCategoryPrefsInFirebase(currentSelections);
+            Toast.makeText(getApplicationContext(), String.format(getString(R.string.category_saved)), Toast.LENGTH_SHORT).show();
             onBackPressed();
         } else if (viewID == R.id.select_all) {
             toggleSelectAll();
@@ -104,6 +110,11 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             updateSelectionButtonLabel();
         }
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     /**
@@ -166,24 +177,44 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
     public void fetchCategoryPrefsFromFirebase(final ArrayList<String> loadedSelection) {
         // Fetch user category prefs from Firebase
         createProgressDialog(R.string.loading_prefs);
+
         mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get user value
                 User user = dataSnapshot.getValue(User.class);
-//                editor.putString("user_categories", user.getCategories());
-                loadedSelection.addAll(Arrays.asList(user.getCategories().split(",")));
-                stringBooleanToArrayBoolean(loadedSelection);
-                categoryAdapter.setCheckedSelections(stringBooleanToArrayBoolean(loadedSelection));
-                categoryAdapter.notifyDataSetChanged();
-                progressDialog.dismiss();
+                if (user.getCategories() != null) {
+                    //                editor.putString("user_categories", user.getCategories());
+                    loadedSelection.addAll(Arrays.asList(user.getCategories().split(",")));
+                    boolean selections[] = stringBooleanToArrayBoolean(loadedSelection);
+                    categoryAdapter.setCheckedSelections(selections);
+                    categoryAdapter.notifyDataSetChanged();
+                    editor.putString("user_categories", saveCategoryPreferences());
+                    editor.apply();
+                    progressDialog.dismiss();
+                }
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 Log.e("Firebase Database Error", "");
                 progressDialog.dismiss();
             }
         });
+        if (!isNetworkAvailable()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    /**
+     * Check if internet available to download preferences
+     * @return boolean state
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     /**
@@ -204,27 +235,25 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         return result;
     }
 
-    public void saveCategoryPreferences() {
+    public String saveCategoryPreferences() {
         String currentSelections = "";
         for (int i = 0; i < categoryAdapter.getCount(); i++) {
-            ViewHolder viewHolder = (ViewHolder) categoryAdapter.getView(i, null, null).getTag();
-            CheckBox checkBox = viewHolder.checkBox;
-            if (checkBox.isChecked()) {
+            if (categoryAdapter.checkSelectionList[i]) {
                 currentSelections += "true,";
             } else {
                 currentSelections += "false,";
             }
         }
 
+        Log.e("Selections: ", currentSelections);
         editor.putString("user_categories", currentSelections);
-        editor.commit();
-
-        syncCategoryPrefsInFirebase();
+        editor.apply();
+        return currentSelections;
     }
 
-    public void syncCategoryPrefsInFirebase() {
+    public void syncCategoryPrefsInFirebase(String currentSelections) {
         try {
-            mDatabase.child("users").child(user.getUid()).child("categories").setValue(pref.getString("user_categories", ""));
+            mDatabase.child("users").child(user.getUid()).child("categories").setValue(currentSelections);
         } catch (Exception e) {
             Log.e("Error", String.format(getString(R.string.firebase_sync_error)));
         }

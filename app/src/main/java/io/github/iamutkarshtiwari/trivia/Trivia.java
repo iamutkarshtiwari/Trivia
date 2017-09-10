@@ -72,6 +72,7 @@ import java.util.Random;
 import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import io.github.iamutkarshtiwari.trivia.models.CustomList;
 import io.github.iamutkarshtiwari.trivia.models.User;
 import io.github.iamutkarshtiwari.trivia.models.UserPrefs;
 
@@ -80,14 +81,18 @@ public class Trivia extends AppCompatActivity
         View.OnClickListener {
 
 
+    private final String TRIVIA_URL = "https://opentdb.com/api.php?amount=1";
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
     private static final int RC_CATEGORY = 9003;
     private static final int RC_PREFERENCE = 9004;
     private static final String MY_PREFS_NAME = "Trivia";
+
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
-
+    private static boolean isCurrentQuestionBooleanStyled = false;
+    private static int correctOptionIndex = -1;
+    private static LinearLayout nextQuestionBtn, removeOneBtn, extraSecondsBtn;
 
     private FirebaseAuth mAuth;
     private SharedPreferences pref;
@@ -135,16 +140,21 @@ public class Trivia extends AppCompatActivity
 
         // Loads user prefs
         loadPreferences();
+        // Load player name & score
+        ((TextView) findViewById(R.id.playerName)).setText(pref.getString("user_name", ""));
+//        ((TextView) findViewById(R.id.playerScore)).setText(pref.getString("user_name", ""));
 
         // Next question
-        LinearLayout app_layer = (LinearLayout) findViewById(R.id.next_question);
-        app_layer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                nextQuestion();
-            }
-        });
+        nextQuestionBtn = (LinearLayout) findViewById(R.id.next_question);
+        nextQuestionBtn.setOnClickListener(this);
 
+        // Remove one option
+        removeOneBtn = (LinearLayout) findViewById(R.id.remove_one);
+        removeOneBtn.setOnClickListener(this);
+
+        // Extra seconds
+        extraSecondsBtn = (LinearLayout) findViewById(R.id._15_seconds);
+        extraSecondsBtn.setOnClickListener(this);
 
         // Load the countdown timer
         Animation an = new RotateAnimation(0.0f, 270.0f, 90f, 90f);
@@ -180,34 +190,194 @@ public class Trivia extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == RC_CATEGORY) {
             loadPreferences();
+        } else if (requestCode == RC_PREFERENCE) {
+
         }
     }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_profile) {
+        } else if (id == R.id.nav_leaderboard) {
+        } else if (id == R.id.nav_category) {
+            Intent intent = new Intent(getApplicationContext(), Category.class);
+            startActivityForResult(intent, RC_CATEGORY);
+
+        } else if (id == R.id.nav_preferences) {
+            Intent intent = new Intent(getApplicationContext(), Preferences.class);
+            startActivityForResult(intent, RC_PREFERENCE);
+        } else if (id == R.id.nav_logout) {
+            // Confirmation alert
+            AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
+            builder.setMessage(getStringFromID(R.string.wanna_logout));
+            builder.setPositiveButton(getStringFromID(R.string.ok), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    signOut();
+                    clearPreferences();
+                    sendToLogin();
+                }
+            });
+
+            builder.setNegativeButton(getStringFromID(R.string.cancel), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.cancel();
+                }
+            });
+
+            AlertDialog alert = builder.create();
+            alert.show();
+
+        }
+        return closeDrawer();
+
+    }
+
+    public boolean closeDrawer() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return false;
+    }
+
 
     @Override
     public void onClick(View view) {
 
-//        switch (v.getId()) {
-//
-//            case R.id.next_question:
-//                break;
-//
-//            case R.id.twoButton:
-//                // do your code
-//                break;
-//
-//            case R.id.threeButton:
-//                // do your code
-//                break;
-//
-//            default:
-//                break;
-//        }
+        int id = view.getId();
+
+        if (id == R.id.next_question) {
+            nextQuestion();
+        } else if (id == R.id.remove_one) {
+            removeOneOption(view);
+        } else if (id == R.id._15_seconds) {
+
+        }
     }
 
+    /**
+     * Shows next question
+     */
+    public void nextQuestion() {
+        toggleNetworkMessage(View.INVISIBLE);
+        toggleQuestionDetailsVisibilty(View.INVISIBLE);
+        findViewById(R.id.category).setVisibility(View.INVISIBLE);
+        resetOptionAlpha();
+
+        // Stop previous timers
+        stopTimer();
+
+        String params = "";
+        if (currentUserPrefs.getCategories().size() > 0) {
+            params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
+        }
+        params += "&type=multiple";
+
+        final String url = TRIVIA_URL + params;
+        new HttpGetRequest().execute(url);
+    }
+
+    /**
+     * Returns random item from passed ArrayList
+     * @param list list from which random item is picked
+     * @param <T> generic datatype
+     * @return random item from the list
+     */
+    private <T> T getRandomItem(ArrayList<T> list)
+    {
+        Random random = new Random();
+        int listSize = list.size();
+        int randomIndex = random.nextInt(listSize);
+        return list.get(randomIndex);
+    }
+
+
+    /**
+     * Parse the JSON response from triviaDB
+     * @param jsonObject containing the response
+     */
+    public void retrieveQuestion(JSONObject jsonObject) {
+        if (jsonObject != null) {
+            String question = "";
+            String category = "";
+            options = new ArrayList<>();
+            try {
+                Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
+                question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
+                category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
+                if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
+                    category = category.substring(15);
+                } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
+                    category = category.substring(9);
+                }
+                correctOption = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer")).text();
+                options.add(correctOption);
+                for (int i = 1; i < 4; i++) {
+                    options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1)).text());
+                }
+                Collections.shuffle(options);
+
+            } catch (JSONException e) {
+                Log.e("ERROR: ", "Could not parse question");
+                // Hide question-option panels
+                toggleQuestionPanelVisibilty(View.INVISIBLE);
+                toggleNetworkMessage(View.VISIBLE);
+                return;
+            }
+
+            TextView questionView = (TextView) findViewById(R.id.question);
+            questionView.setText(question);
+
+            TextView categoryView = (TextView) findViewById(R.id.category);
+            categoryView.setText(category);
+
+            for (int i = 0; i < 4; i++) {
+                String optionID = "option" + (i + 1);
+                int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+
+                if (options.get(i).equalsIgnoreCase(correctOption)) {
+                    correctOptionIndex = i;
+                }
+
+                View includedLayout = findViewById(resID);
+                Button option = (Button)includedLayout.findViewById(R.id.option);
+                option.setText(options.get(i));
+                // Fix the alpha and visibility from previous answer result
+                option.setAlpha(1.0f);
+                option.setVisibility(View.VISIBLE);
+
+                ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                symbol.setVisibility(View.INVISIBLE);
+            }
+
+            // Display question details
+            toggleNetworkMessage(View.INVISIBLE);
+            toggleQuestionPanelVisibilty(View.VISIBLE);
+            toggleQuestionDetailsVisibilty(View.VISIBLE);
+            enableClickOnOptions(true);
+
+            findViewById(R.id.category).setVisibility(View.VISIBLE);
+            enableOptionButton(extraSecondsBtn);
+            enableOptionButton(removeOneBtn);
+
+            // Start countdown timer
+            startTimer(41);
+
+        } else {
+            // Hide question-option panels
+            toggleQuestionPanelVisibilty(View.INVISIBLE);
+            toggleNetworkMessage(View.VISIBLE);
+        }
+    }
 
 
     public void checkAnswer(View view) {
         Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
+        stopTimer();
         Button input = (Button) view;
         String pressedOption = input.getText().toString();
 
@@ -241,131 +411,52 @@ public class Trivia extends AppCompatActivity
 
     }
 
-    public void nextQuestion() {
-        toggleNetworkMessage(View.INVISIBLE);
-        toggleQuestionDetailsVisibilty(View.INVISIBLE);
-        findViewById(R.id.category).setVisibility(View.INVISIBLE);
-        resetOptionAlpha();
-
-        // Stop previous countdown timer
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-            countdownProgress.setProgress(0);
-            progressValue.setVisibility(View.INVISIBLE);
+    public void removeOneOption(View pressedButton) {
+        ArrayList<Integer> wrongOptions = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            if (i != correctOptionIndex) {
+                wrongOptions.add(i);
+            }
         }
-
-        String params = "";
-        if (currentUserPrefs.getCategories().size() > 0) {
-            params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
-        }
-        params += "&type=multiple";
-
-        final String url = "https://opentdb.com/api.php?amount=1" + params;
-        new HttpGetRequest().execute(url);
-    }
-
-    /**
-     * Returns random item from passed ArrayList
-     * @param list list from which random item is picked
-     * @param <T> generic datatype
-     * @return random item from the list
-     */
-    private <T> T getRandomItem(ArrayList<T> list)
-    {
         Random random = new Random();
-        int listSize = list.size();
+        int listSize = wrongOptions.size();
         int randomIndex = random.nextInt(listSize);
-        return list.get(randomIndex);
+
+
+
+        String optionID = "option" + (wrongOptions.get(randomIndex) + 1);
+        int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+        View includedLayout = findViewById(resID);
+        Button option = (Button)includedLayout.findViewById(R.id.option);
+        option.setVisibility(View.INVISIBLE);
+
+        disableOptionButton(pressedButton);
     }
 
+    public void enableOptionButton(View button) {
+        button.setAlpha(1.0f);
+        button.setClickable(true);
+    }
 
-    /**
-     * Parse the JSON response from triviaDB
-     * @param jsonObject containing the response
-     */
-    public void processValue(JSONObject jsonObject) {
-        if (jsonObject != null) {
-            String question = "";
-            String category = "";
-            options = new ArrayList<>();
-            try {
-                Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
-                question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
-                category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
-                if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
-                    category = category.substring(15);
-                } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
-                    category = category.substring(9);
-                }
-                correctOption = jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer");
-                options.add(correctOption);
-                for (int i = 1; i < 4; i++) {
-                    options.add(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1));
-                }
-                Collections.shuffle(options);
-
-            } catch (JSONException e) {
-                Log.e("ERROR: ", "Could not parse question");
-                // Hide question-option panels
-                toggleQuestionPanelVisibilty(View.INVISIBLE);
-                toggleNetworkMessage(View.VISIBLE);
-                return;
-            }
-
-            TextView questionView = (TextView) findViewById(R.id.question);
-            questionView.setText(question);
-
-            TextView categoryView = (TextView) findViewById(R.id.category);
-            categoryView.setText(category);
-
-            for (int i = 0; i < 4; i++) {
-                String optionID = "option" + (i + 1);
-                int resID = getResources().getIdentifier(optionID, "id", getPackageName());
-
-                View includedLayout = findViewById(resID);
-                Button option = (Button)includedLayout.findViewById(R.id.option);
-                option.setText(Jsoup.parse(options.get(i)).text());
-                // Fix the alpha from previous answer result
-                option.setAlpha(1.0f);
-
-                ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
-                symbol.setVisibility(View.INVISIBLE);
-            }
-
-            // Display question details
-            toggleNetworkMessage(View.INVISIBLE);
-            toggleQuestionPanelVisibilty(View.VISIBLE);
-            toggleQuestionDetailsVisibilty(View.VISIBLE);
-            enableClickOnOptions(true);
-            findViewById(R.id.category).setVisibility(View.VISIBLE);
-
-            // Start countdown timer
-            countDownTimer = Timer(41);
-            countDownTimer.start();
-            progressValue.setVisibility(View.VISIBLE);
-
-        } else {
-            // Hide question-option panels
-            toggleQuestionPanelVisibilty(View.INVISIBLE);
-            toggleNetworkMessage(View.VISIBLE);
-        }
+    public void disableOptionButton(View button) {
+        button.setAlpha(0.5f);
+        button.setClickable(false);
     }
 
     /**
      * Countdown timer for questions
      * @param secs seconds
      */
-    private CountDownTimer Timer(final int secs) {
-        return new CountDownTimer(secs * 1000, 1000) {
+    public void startTimer(final int secs) {
+        progressValue.setVisibility(View.VISIBLE);
+        countDownTimer = new CountDownTimer(secs * 1000, 1000) {
             // 500 means, onTick function will be called at every 500 milliseconds
 
             @Override
             public void onTick(long leftTimeInMilliseconds) {
                 long seconds = leftTimeInMilliseconds / 1000;
-                countdownProgress.setProgress((int)seconds);
+                countdownProgress.setProgress((int) ((seconds / (float) (secs - 1)) * 100.0));
                 progressValue.setText(String.format("%d", seconds));
-                // format the textview to show the easily readable format
-
             }
             @Override
             public void onFinish() {
@@ -377,9 +468,17 @@ public class Trivia extends AppCompatActivity
 //                progressView.setVisibility(View.INVISIBLE);
                 nextQuestion();
             }
-        };
+        }.start();
     }
 
+    public void stopTimer() {
+        // Stop previous countdown timer
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countdownProgress.setProgress(0);
+            progressValue.setVisibility(View.INVISIBLE);
+        }
+    }
 
     /**
      * Resets alpha values of options to default
@@ -442,15 +541,6 @@ public class Trivia extends AppCompatActivity
         findViewById(R.id.option4).setVisibility(flag);
     }
 
-
-    /**
-     * Disable clicks on this view
-     * @param view of which clicks are to be disabled
-     */
-    public void disableTouch(View view) {
-        view.setClickable(false);
-    }
-
     /**
      * Enable clicks on this view
      * @param view of which clicks are to be enabled
@@ -474,8 +564,7 @@ public class Trivia extends AppCompatActivity
             spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
             spinner.setVisibility(View.VISIBLE);
             ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
-            disableTouch(findViewById(R.id.next_question));
-//            changeQuestionDetailsBGColor(R.color.questionPanelDim);
+            disableOptionButton(findViewById(R.id.next_question));
         }
 
         @Override
@@ -534,9 +623,8 @@ public class Trivia extends AppCompatActivity
         protected void onPostExecute(JSONObject result){
             spinner.setVisibility(View.INVISIBLE);
             ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
-            processValue(result);
-            enableTouch(findViewById(R.id.next_question));
-//            changeQuestionDetailsBGColor(R.color.white);
+            retrieveQuestion(result);
+            enableOptionButton(findViewById(R.id.next_question));
         }
     }
 
@@ -569,7 +657,7 @@ public class Trivia extends AppCompatActivity
         } else {
             // Load user details
             editor.putString("user_email", currentUser.getEmail());
-            editor.commit();
+            editor.apply();
 
             // Display user name and email in navigation header view
             View navHeaderView = navigationView.getHeaderView(0);
@@ -578,8 +666,9 @@ public class Trivia extends AppCompatActivity
             if (pref.getString("user_name", "").length() == 0) {
                 if (currentUser.getDisplayName() != null) {
                     editor.putString("user_name", currentUser.getDisplayName());
-                    editor.commit();
+                    editor.apply();
                     userName.setText(pref.getString("user_name", ""));
+                    ((TextView) findViewById(R.id.playerName)).setText(pref.getString("user_name", ""));
                 } else {
                     // Fetch user's name from database
                     mDatabase.child("users").child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -588,8 +677,9 @@ public class Trivia extends AppCompatActivity
                             // Get user value
                             User user = dataSnapshot.getValue(User.class);
                             editor.putString("user_name", user.getName());
-                            editor.commit();
+                            editor.apply();
                             userName.setText(pref.getString("user_name", ""));
+                            ((TextView) findViewById(R.id.playerName)).setText(pref.getString("user_name", ""));
                         }
 
                         @Override
@@ -656,55 +746,6 @@ public class Trivia extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_profile) {
-        } else if (id == R.id.nav_leaderboard) {
-        } else if (id == R.id.nav_category) {
-            Intent intent = new Intent(getApplicationContext(), Category.class);
-            startActivityForResult(intent, RC_CATEGORY);
-
-        } else if (id == R.id.nav_preferences) {
-            Intent intent = new Intent(getApplicationContext(), Preferences.class);
-            startActivityForResult(intent, RC_PREFERENCE);
-        } else if (id == R.id.nav_logout) {
-            // Confirmation alert
-            AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
-            builder.setMessage(getStringFromID(R.string.wanna_logout));
-            builder.setPositiveButton(getStringFromID(R.string.ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int id) {
-                    signOut();
-                    clearPreferences();
-                    sendToLogin();
-                }
-            });
-
-            builder.setNegativeButton(getStringFromID(R.string.cancel), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.cancel();
-                }
-            });
-
-            AlertDialog alert = builder.create();
-            alert.show();
-
-        }
-        return closeDrawer();
-
-    }
-
-    public boolean closeDrawer() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return false;
-    }
-
     public void loadPreferences() {
         currentUserPrefs = new UserPrefs();
 
@@ -733,7 +774,7 @@ public class Trivia extends AppCompatActivity
         // Clear image base64 string
         editor.putString("user_image", "");
 
-        editor.commit();
+        editor.apply();
     }
 
     private void signOut() {
@@ -821,7 +862,7 @@ public class Trivia extends AppCompatActivity
                 playerImageView.setImageBitmap(result);
                 // Save in shared preferences
                 editor.putString("user_image", encodeToBase64(result));
-                editor.commit();
+                editor.apply();
             }
 //            simpleWaitDialog.dismiss();
 
