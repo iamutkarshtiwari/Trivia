@@ -91,6 +91,7 @@ public class Trivia extends AppCompatActivity
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
     private static boolean isCurrentQuestionBooleanStyled = false;
+    private static boolean isInFront = true;
     private static int correctOptionIndex = -1;
     private static LinearLayout nextQuestionBtn, removeOneBtn, extraSecondsBtn;
 
@@ -186,6 +187,18 @@ public class Trivia extends AppCompatActivity
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        isInFront = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isInFront = false;
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == RC_CATEGORY) {
@@ -255,7 +268,7 @@ public class Trivia extends AppCompatActivity
         } else if (id == R.id.remove_one) {
             removeOneOption(view);
         } else if (id == R.id._15_seconds) {
-
+            giveExtraSeconds(view);
         }
     }
 
@@ -363,6 +376,7 @@ public class Trivia extends AppCompatActivity
             findViewById(R.id.category).setVisibility(View.VISIBLE);
             enableOptionButton(extraSecondsBtn);
             enableOptionButton(removeOneBtn);
+            enableOptionButton(extraSecondsBtn);
 
             // Start countdown timer
             startTimer(41);
@@ -371,6 +385,9 @@ public class Trivia extends AppCompatActivity
             // Hide question-option panels
             toggleQuestionPanelVisibilty(View.INVISIBLE);
             toggleNetworkMessage(View.VISIBLE);
+            // Disable remove-option and extra-time options
+            disableOptionButton(removeOneBtn);
+            disableOptionButton(extraSecondsBtn);
         }
     }
 
@@ -433,6 +450,16 @@ public class Trivia extends AppCompatActivity
         disableOptionButton(pressedButton);
     }
 
+    public void giveExtraSeconds(View pressedButton) {
+        int leftTime = Integer.parseInt(progressValue.getText().toString());
+        leftTime = (leftTime + 16);
+        // Stop previous timers
+        stopTimer();
+        startTimer(leftTime);
+        disableOptionButton(pressedButton);
+    }
+
+
     public void enableOptionButton(View button) {
         button.setAlpha(1.0f);
         button.setClickable(true);
@@ -464,9 +491,12 @@ public class Trivia extends AppCompatActivity
                 countdownProgress.setProgress(0);
                 progressValue.setText(String.format("%d", 0));
                 progressValue.setVisibility(View.INVISIBLE);
-//                View progressView = findViewById(R.id.circularProgressBar);
-//                progressView.setVisibility(View.INVISIBLE);
-                nextQuestion();
+                // Move to next question if activity is active
+                if (isInFront) {
+                    nextQuestion();
+                } else {
+                    toggleQuestionPanelVisibilty(View.INVISIBLE);
+                }
             }
         }.start();
     }

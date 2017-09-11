@@ -191,8 +191,9 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
                     categoryAdapter.notifyDataSetChanged();
                     editor.putString("user_categories", saveCategoryPreferences());
                     editor.apply();
-                    progressDialog.dismiss();
                 }
+
+                progressDialog.dismiss();
             }
 
             @Override

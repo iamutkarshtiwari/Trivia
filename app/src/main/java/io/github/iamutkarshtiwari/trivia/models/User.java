@@ -14,6 +14,7 @@ public class User {
     private String difficulty;
     private String categories;
     private String types;
+    private String music;
 
 
     public User() {
@@ -61,5 +62,13 @@ public class User {
 
     public String getTypes() {
         return types;
+    }
+
+    public void setMusic(String music) {
+        this.music = music;
+    }
+
+    public String getMusic() {
+        return this.music;
     }
 }

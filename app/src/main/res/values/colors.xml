@@ -19,7 +19,7 @@
     <color name="lightGray">#616161</color>
     <color name="circularProgressBG">#472256</color>
     <color name="circularProgressRadius">#8EB021</color>
-    <color name="preferencesBG">#e8e9ea</color>
-    <color name="preferencesDivider">#a9a9a9</color>
+    <color name="preferencesBG">#F4F4F4</color>
+    <color name="preferencesDivider">#b4b4b4</color>
 
 </resources>
