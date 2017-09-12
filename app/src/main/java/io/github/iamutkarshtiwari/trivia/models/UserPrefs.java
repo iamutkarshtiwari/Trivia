@@ -47,7 +47,7 @@ public class UserPrefs {
     public void setDifficulty(String diff) {
         ArrayList<String> result = new ArrayList<>();
         int index = 0;
-        for (String value: Arrays.asList(diff.split(",")) {
+        for (String value: Arrays.asList(diff.split(","))) {
             if (value.equalsIgnoreCase("true")) {
                 result.add(difficultyValues[index]);
             }

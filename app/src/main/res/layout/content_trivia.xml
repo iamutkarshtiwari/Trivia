@@ -205,6 +205,43 @@
 
         </TableLayout>
 
+        <TableLayout
+            android:id="@+id/boolean_option_grid"
+            android:layout_width="match_parent"
+            android:layout_height="105dp"
+            android:layout_below="@id/question_panel"
+            android:layout_marginTop="16dp"
+            android:visibility="invisible"
+            android:elevation="2dp">
+
+            <TableRow
+                android:id="@+id/boolean_row"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:padding="2dp">
+
+                <include
+                    android:id="@+id/boolean1"
+                    layout="@layout/option_button"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <include
+                    android:id="@+id/boolean2"
+                    layout="@layout/option_button"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </TableRow>
+
+        </TableLayout>
+
+
         <com.wang.avi.AVLoadingIndicatorView
             android:id="@+id/spinner"
             style="@style/AVLoadingIndicatorView.Small"

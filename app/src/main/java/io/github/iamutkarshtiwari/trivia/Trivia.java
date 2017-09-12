@@ -168,14 +168,14 @@ public class Trivia extends AppCompatActivity
         // Load a question on start
         nextQuestion();
 
-        // Attach listeners to option buttons
-        for (int i = 0; i < 4; i++) {
-            String optionID = "option" + (i + 1);
+        // Attach listeners to multi choice option buttons
+        for (int i = 0; i < 6; i++) {
+            String optionID = ((i < 4) ? "option" : "boolean") + ((i % 4) + 1);
             int resID = getResources().getIdentifier(optionID, "id", getPackageName());
 
             View includedLayout = findViewById(resID);
-            Button option = (Button)includedLayout.findViewById(R.id.option);
-            option.setOnClickListener(new View.OnClickListener() {
+            Button button = (Button) includedLayout.findViewById(R.id.option);
+            button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // Send clicks to class listener
@@ -275,13 +275,15 @@ public class Trivia extends AppCompatActivity
      */
     public void nextQuestion() {
         toggleNetworkMessage(View.INVISIBLE);
-        toggleQuestionDetailsVisibilty(View.INVISIBLE);
+        toggleMultiQuestionDetailsVisibility(View.INVISIBLE);
+        toggleBooleanQuestionDetailsVisibility(View.INVISIBLE);
         findViewById(R.id.category).setVisibility(View.INVISIBLE);
         resetOptionAlpha();
 
         // Disable remove-option and extra-time options
         disableOptionButton(removeOneBtn);
         disableOptionButton(extraSecondsBtn);
+        disableOptionButton(nextQuestionBtn);
 
         // Stop previous timers
         stopTimer();
@@ -294,10 +296,12 @@ public class Trivia extends AppCompatActivity
             params += "&difficulty=" + getRandomItem(currentUserPrefs.getDifficulty());
         }
         if (currentUserPrefs.getTypes().size() > 0) {
-            params += "&type=" + getRandomItem(currentUserPrefs.getTypes());
+            String type = getRandomItem(currentUserPrefs.getTypes());
+            params += "&type=" + type;
         }
 
         final String url = TRIVIA_URL + params;
+        Log.e("URI QUESTION ", url);
         new HttpGetRequest().execute(url);
     }
 
@@ -324,20 +328,34 @@ public class Trivia extends AppCompatActivity
         if (jsonObject != null) {
             String question = "";
             String category = "";
+            String type = "";
             options = new ArrayList<>();
             try {
+                // If a blank response, find next question
+                if (jsonObject.getJSONArray("results").length() == 0) {
+                    nextQuestion();
+                    return;
+                }
                 Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
                 question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
                 category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
+
                 if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
                     category = category.substring(15);
                 } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
                     category = category.substring(9);
                 }
+
+                type = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("type")).text();
                 correctOption = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer")).text();
                 options.add(correctOption);
-                for (int i = 1; i < 4; i++) {
-                    options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1)).text());
+
+                if (!type.equalsIgnoreCase("boolean")) {
+                    for (int i = 1; i < 4; i++) {
+                        options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1)).text());
+                    }
+                } else {
+                    options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(0)).text());
                 }
                 Collections.shuffle(options);
 
@@ -354,36 +372,63 @@ public class Trivia extends AppCompatActivity
 
             TextView categoryView = (TextView) findViewById(R.id.category);
             categoryView.setText(category);
+            if (!type.equalsIgnoreCase("boolean")) {
+                for (int i = 0; i < 4; i++) {
+                    String optionID = "option" + (i + 1);
+                    int resID = getResources().getIdentifier(optionID, "id", getPackageName());
 
-            for (int i = 0; i < 4; i++) {
-                String optionID = "option" + (i + 1);
-                int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+                    if (options.get(i).equalsIgnoreCase(correctOption)) {
+                        correctOptionIndex = i;
+                    }
 
-                if (options.get(i).equalsIgnoreCase(correctOption)) {
-                    correctOptionIndex = i;
+                    View includedLayout = findViewById(resID);
+                    Button option = (Button) includedLayout.findViewById(R.id.option);
+                    option.setText(options.get(i));
+                    // Fix the alpha and visibility from previous answer result
+                    includedLayout.setAlpha(1.0f);
+                    includedLayout.setVisibility(View.VISIBLE);
+
+                    ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                    symbol.setVisibility(View.INVISIBLE);
                 }
+                // Display multi choice questions
+                toggleMultiQuestionDetailsVisibility(View.VISIBLE);
+            }  else {
+                for (int i = 0; i < 2; i++) {
+                    String optionID = "boolean" + (i + 1);
+                    int resID = getResources().getIdentifier(optionID, "id", getPackageName());
 
-                View includedLayout = findViewById(resID);
-                Button option = (Button)includedLayout.findViewById(R.id.option);
-                option.setText(options.get(i));
-                // Fix the alpha and visibility from previous answer result
-                option.setAlpha(1.0f);
-                option.setVisibility(View.VISIBLE);
+                    if (options.get(i).equalsIgnoreCase(correctOption)) {
+                        correctOptionIndex = i;
+                    }
 
-                ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
-                symbol.setVisibility(View.INVISIBLE);
+                    View includedLayout = findViewById(resID);
+                    Button option = (Button) includedLayout.findViewById(R.id.option);
+                    option.setText(options.get(i));
+                    // Fix the alpha and visibility from previous answer result
+                    includedLayout.setAlpha(1.0f);
+                    includedLayout.setVisibility(View.VISIBLE);
+
+                    ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                    symbol.setVisibility(View.INVISIBLE);
+                }
+                toggleBooleanQuestionDetailsVisibility(View.VISIBLE);
             }
 
             // Display question details
             toggleNetworkMessage(View.INVISIBLE);
             toggleQuestionPanelVisibilty(View.VISIBLE);
-            toggleQuestionDetailsVisibilty(View.VISIBLE);
             enableClickOnOptions(true);
+            if (type.equalsIgnoreCase("boolean")) {
+                toggleMultiTypeView(false);
+            } else {
+                toggleMultiTypeView(true);
+            }
 
             findViewById(R.id.category).setVisibility(View.VISIBLE);
             enableOptionButton(extraSecondsBtn);
             enableOptionButton(removeOneBtn);
-            enableOptionButton(extraSecondsBtn);
+            enableOptionButton(nextQuestionBtn);
 
             // Start countdown timer
             startTimer(41);
@@ -392,9 +437,19 @@ public class Trivia extends AppCompatActivity
             // Hide question-option panels
             toggleQuestionPanelVisibilty(View.INVISIBLE);
             toggleNetworkMessage(View.VISIBLE);
+            enableOptionButton(nextQuestionBtn);
         }
     }
 
+    public void toggleMultiTypeView(boolean flag) {
+        int visibilityMulti = flag ? View.VISIBLE : View.INVISIBLE;
+        int visibilityBoolean = flag ? View.INVISIBLE : View.VISIBLE;
+        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
+        optionPanel.setVisibility(visibilityMulti);
+
+        TableLayout booleanOptionPanel = (TableLayout) findViewById(R.id.boolean_option_grid);
+        booleanOptionPanel.setVisibility(visibilityBoolean);
+    }
 
     public void checkAnswer(View view) {
         Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
@@ -403,8 +458,9 @@ public class Trivia extends AppCompatActivity
         String pressedOption = input.getText().toString();
 
         int index = 1;
+        String id = options.size() == 2 ? "boolean" : "option";
         for (String option: options) {
-            int resID = getResources().getIdentifier("option" + index, "id", getPackageName());
+            int resID = getResources().getIdentifier(id + index, "id", getPackageName());
             View includedLayout = findViewById(resID);
 
             Button optionButton = (Button)includedLayout.findViewById(R.id.option);
@@ -563,8 +619,8 @@ public class Trivia extends AppCompatActivity
      * @param flag to toggle click listener
      */
     public void enableClickOnOptions(boolean flag) {
-        for (int i = 0; i < 4; i++) {
-            String optionID = "option" + (i + 1);
+        for (int i = 0; i < 6; i++) {
+            String optionID = ((i < 4) ? "option" : "boolean") + ((i % 4) + 1);
             int resID = getResources().getIdentifier(optionID, "id", getPackageName());
             View includedLayout = findViewById(resID);
             Button option = (Button) includedLayout.findViewById(R.id.option);
@@ -576,12 +632,18 @@ public class Trivia extends AppCompatActivity
      * Toggles Question + Options text visibility
      * @param flag to toggle visibility
      */
-    public void toggleQuestionDetailsVisibilty(int flag) {
+    public void toggleMultiQuestionDetailsVisibility(int flag) {
         findViewById(R.id.question).setVisibility(flag);
         findViewById(R.id.option1).setVisibility(flag);
         findViewById(R.id.option2).setVisibility(flag);
         findViewById(R.id.option3).setVisibility(flag);
         findViewById(R.id.option4).setVisibility(flag);
+    }
+
+    public void toggleBooleanQuestionDetailsVisibility(int flag) {
+        findViewById(R.id.question).setVisibility(flag);
+        findViewById(R.id.boolean1).setVisibility(flag);
+        findViewById(R.id.boolean2).setVisibility(flag);
     }
 
     /**
@@ -607,7 +669,6 @@ public class Trivia extends AppCompatActivity
             spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
             spinner.setVisibility(View.VISIBLE);
             ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
-            disableOptionButton(findViewById(R.id.next_question));
         }
 
         @Override
@@ -666,7 +727,6 @@ public class Trivia extends AppCompatActivity
             spinner.setVisibility(View.INVISIBLE);
             ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
             retrieveQuestion(result);
-            enableOptionButton(findViewById(R.id.next_question));
         }
     }
 
