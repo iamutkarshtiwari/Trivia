@@ -100,6 +100,10 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         int viewID = view.getId();
 
         if (viewID == R.id.save) {
+            if (!isAreAllCategoriesUnchecked()) {
+                Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_category)), Toast.LENGTH_SHORT).show();
+                return;
+            }
             String currentSelections = saveCategoryPreferences();
             syncCategoryPrefsInFirebase(currentSelections);
             Toast.makeText(getApplicationContext(), String.format(getString(R.string.category_saved)), Toast.LENGTH_SHORT).show();
@@ -112,8 +116,20 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
 
     }
 
+    public boolean isAreAllCategoriesUnchecked() {
+        boolean result = false;
+        for (int i = 0; i < categoryAdapter.getCount(); i++) {
+            result |= categoryAdapter.checkSelectionList[i];
+        }
+        return result;
+    }
+
     @Override
     public void onBackPressed() {
+        if (!isAreAllCategoriesUnchecked()) {
+            Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_category)), Toast.LENGTH_SHORT).show();
+            return;
+        }
         super.onBackPressed();
     }
 

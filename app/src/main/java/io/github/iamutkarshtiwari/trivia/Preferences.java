@@ -84,6 +84,7 @@ public class Preferences extends AppCompatActivity {
     public void setupLabelsAndPrefs() {
         String loadedSelection = "";
         ArrayList<String> selections = new ArrayList<>();
+        // NOTE: This is the exact order to be followed while read/write
         loadedSelection += pref.getString("user_difficulty", "");
         loadedSelection += pref.getString("user_question_types", "");
         loadedSelection += pref.getString("user_music", "");
@@ -107,14 +108,47 @@ public class Preferences extends AppCompatActivity {
             easyRow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ToggleButton togglebtn = (ToggleButton) v.findViewById(R.id.toggleButton);
-                    togglebtn.setChecked(!togglebtn.isChecked());
+                    ToggleButton toggleButton = (ToggleButton) v.findViewById(R.id.toggleButton);
+                    toggleButton.setChecked(!toggleButton.isChecked());
+                    int id = v.getId();
+
+                    if (id == LABELS[0][0] || id == LABELS[1][0] || id == LABELS[2][0]) {
+                        if(!isAtleastOneDifficultyEnabled()) {
+                            Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_option)), Toast.LENGTH_SHORT).show();
+                            toggleButton.setChecked(!toggleButton.isChecked());
+                        }
+                    } else if (id == LABELS[3][0] || id == LABELS[4][0]) {
+                        if(!isAtleastOneTypeEnabled()) {
+                            Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_option)), Toast.LENGTH_SHORT).show();
+                            toggleButton.setChecked(!toggleButton.isChecked());
+                        }
+                    }
                 }
             });
 
             TextView txt = (TextView) easyRow.findViewById(R.id.label);
             txt.setText(LABELS[i][1]);
         }
+    }
+
+    public boolean isAtleastOneDifficultyEnabled() {
+        boolean result = false;
+        for (int i = 0; i < 3; i++) {
+            View easyRow = findViewById(LABELS[i][0]);
+            ToggleButton toggleButton = (ToggleButton) easyRow.findViewById(R.id.toggleButton);
+            result |= toggleButton.isChecked();
+        }
+        return result;
+    }
+
+    public boolean isAtleastOneTypeEnabled() {
+        boolean result = false;
+        for (int i = 3; i < 5; i++) {
+            View easyRow = findViewById(LABELS[i][0]);
+            ToggleButton toggleButton = (ToggleButton) easyRow.findViewById(R.id.toggleButton);
+            result |= toggleButton.isChecked();
+        }
+        return result;
     }
 
     @Override
@@ -142,11 +176,12 @@ public class Preferences extends AppCompatActivity {
                 User user = dataSnapshot.getValue(User.class);
                 if (user.getTypes() != null && user.getDifficulty() != null && user.getMusic() != null) {
                     String data = "";
-                    data += user.getTypes();
+                    // NOTE: This is the exact order to be followed while read/write
                     data += user.getDifficulty();
+                    data += user.getTypes();
                     data += user.getMusic();
 
-                    editor.putString("user_types", user.getTypes());
+                    editor.putString("user_difficulty", user.getTypes());
                     editor.putString("user_question_types", user.getTypes());
                     editor.putString("user_music", user.getMusic());
                     editor.commit();

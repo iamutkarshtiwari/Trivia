@@ -72,5 +72,7 @@
     <string name="about">About</string>
     <string name="app_settings">App Settings</string>
     <string name="app_lang">App Language</string>
+    <string name="at_least_one_option">At least one option should be enabled</string>
+    <string name="at_least_one_category">At leaset one category should be selected</string>
 
 </resources>

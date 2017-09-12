@@ -203,6 +203,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         User user = new User();
         user.setName(name);
         user.setEmail(email);
+        user.setTypes("false,true,");
+        user.setDifficulty("true,false,false,");
+        user.setMusic("false,");
         mDatabase.child("users").child(Uid).setValue(user);
     }
 
