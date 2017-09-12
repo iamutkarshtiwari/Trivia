@@ -119,6 +119,9 @@ public class SignupActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Initiate the signup call to firebase
+     */
     public void signup() {
         Log.d(TAG, "Signup");
 
@@ -231,9 +234,12 @@ public class SignupActivity extends AppCompatActivity {
         createToast(R.string.login_failed, Toast.LENGTH_LONG);
     }
 
+    /**
+     * Validate text fields
+     * @return validation status
+     */
     public boolean validate() {
         boolean valid = true;
-
         String name = _nameText.getText().toString();
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();

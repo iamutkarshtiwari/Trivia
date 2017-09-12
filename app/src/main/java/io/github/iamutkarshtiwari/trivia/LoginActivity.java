@@ -46,7 +46,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     private static final int RC_SIGN_UP = 9003;
     public static ProgressDialog progressDialog;
 
-
     @InjectView(R.id.input_email) EditText _emailText;
     @InjectView(R.id.input_password) EditText _passwordText;
     @InjectView(R.id.btn_login) Button _loginButton;
@@ -117,8 +116,6 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
                 // ...
             }
         };
-
-
     }
 
     // [START on_start_check_user]

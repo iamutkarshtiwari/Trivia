@@ -42,7 +42,7 @@ public class Preferences extends AppCompatActivity {
     private FirebaseUser user;
 
     private final int LABELS[][] = {{R.id.easy, R.string.easy}, {R.id.medium, R.string.medium}, {R.id.hard, R.string.hard},
-            {R.id.bool, R.string.true_false}, {R.id.multiple, R.string.multiple}, {R.id.music, R.string.music}};
+            {R.id.multiple, R.string.multiple}, {R.id.bool, R.string.true_false}, {R.id.music, R.string.music}};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,7 +234,9 @@ public class Preferences extends AppCompatActivity {
         progressDialog.show();
     }
 
-
+    /**
+     * Save selected preferences
+     */
     public void savePreferences() {
         String result = "";
         for (int i = 0; i < LABELS.length; i++) {
@@ -260,6 +262,9 @@ public class Preferences extends AppCompatActivity {
         editor.commit();
     }
 
+    /**
+     * Sync preferences with firebase if internet available
+     */
     public void syncCategoryPrefsInFirebase() {
         try {
             DatabaseReference ref = mDatabase.child("users").child(user.getUid());

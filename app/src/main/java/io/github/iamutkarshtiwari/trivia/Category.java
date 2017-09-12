@@ -74,6 +74,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = pref.edit();
 
+        // Load all saved selections
         boolean loadedSelections[] = loadCategoryPreferences();
         areAllCategoriesSelected = (selectedCount == loadedSelections.length);
         updateSelectionButtonLabel();
@@ -96,6 +97,10 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         selectAll.setOnClickListener(this);
     }
 
+    /**
+     * Generic click listener
+     * @param view clicked
+     */
     public void onClick(View view) {
         int viewID = view.getId();
 
@@ -145,6 +150,9 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         progressDialog.show();
     }
 
+    /**
+     * Updates toggle button text
+     */
     public void updateSelectionButtonLabel() {
         Button selectAll = (Button) findViewById(R.id.select_all);
         if (areAllCategoriesSelected) {
@@ -176,6 +184,10 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         categoryAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Loads selections from shared preferences
+     * @return boolean array 
+     */
     public boolean[] loadCategoryPreferences() {
         ArrayList<String> loadedSelection = new ArrayList<String>();
         String savedSelections = pref.getString("user_categories", "");
@@ -184,16 +196,20 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             loadedSelection.addAll(Arrays.asList(savedSelections.split(",")));
             return stringBooleanToArrayBoolean(loadedSelection);
         } else {
-            fetchCategoryPrefsFromFirebase(loadedSelection);
+            fetchCategoryPrefsFromFirebase();
         }
         // All checkboxes remain unselected if no saved prefs found
         return new boolean[24];
     }
 
-    public void fetchCategoryPrefsFromFirebase(final ArrayList<String> loadedSelection) {
+    /**
+     * Fetches selections from firebase
+     * @param loadedSelection [description]
+     */
+    public void fetchCategoryPrefsFromFirebase() {
         // Fetch user category prefs from Firebase
         createProgressDialog(R.string.loading_prefs);
-
+        final ArrayList<String> loadedSelection = new ArrayList<>();
         mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -208,7 +224,6 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
                     editor.putString("user_categories", saveCategoryPreferences());
                     editor.apply();
                 }
-
                 progressDialog.dismiss();
             }
 
@@ -252,6 +267,10 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         return result;
     }
 
+    /**
+     * Save category selections to shared preferences
+     * @return all selections in string boolean format
+     */
     public String saveCategoryPreferences() {
         String currentSelections = "";
         for (int i = 0; i < categoryAdapter.getCount(); i++) {
@@ -261,13 +280,16 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
                 currentSelections += "false,";
             }
         }
-
         Log.e("Selections: ", currentSelections);
         editor.putString("user_categories", currentSelections);
         editor.apply();
         return currentSelections;
     }
 
+    /**
+     * Sync selections with firebase
+     * @param current selections in string format
+     */
     public void syncCategoryPrefsInFirebase(String currentSelections) {
         try {
             mDatabase.child("users").child(user.getUid()).child("categories").setValue(currentSelections);
