@@ -204,7 +204,7 @@ public class Trivia extends AppCompatActivity
         if(requestCode == RC_CATEGORY) {
             loadPreferences();
         } else if (requestCode == RC_PREFERENCE) {
-
+            loadPreferences();
         }
     }
 
@@ -248,7 +248,6 @@ public class Trivia extends AppCompatActivity
 
         }
         return closeDrawer();
-
     }
 
     public boolean closeDrawer() {
@@ -256,7 +255,6 @@ public class Trivia extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return false;
     }
-
 
     @Override
     public void onClick(View view) {
@@ -281,6 +279,10 @@ public class Trivia extends AppCompatActivity
         findViewById(R.id.category).setVisibility(View.INVISIBLE);
         resetOptionAlpha();
 
+        // Disable remove-option and extra-time options
+        disableOptionButton(removeOneBtn);
+        disableOptionButton(extraSecondsBtn);
+
         // Stop previous timers
         stopTimer();
 
@@ -288,7 +290,12 @@ public class Trivia extends AppCompatActivity
         if (currentUserPrefs.getCategories().size() > 0) {
             params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
         }
-        params += "&type=multiple";
+        if (currentUserPrefs.getDifficulty().size() > 0) {
+            params += "&difficulty=" + getRandomItem(currentUserPrefs.getDifficulty());
+        }
+        if (currentUserPrefs.getTypes().size() > 0) {
+            params += "&type=" + getRandomItem(currentUserPrefs.getTypes());
+        }
 
         final String url = TRIVIA_URL + params;
         new HttpGetRequest().execute(url);
@@ -385,9 +392,6 @@ public class Trivia extends AppCompatActivity
             // Hide question-option panels
             toggleQuestionPanelVisibilty(View.INVISIBLE);
             toggleNetworkMessage(View.VISIBLE);
-            // Disable remove-option and extra-time options
-            disableOptionButton(removeOneBtn);
-            disableOptionButton(extraSecondsBtn);
         }
     }
 
@@ -428,6 +432,10 @@ public class Trivia extends AppCompatActivity
 
     }
 
+    /**
+     * Removes one of the wrong options
+     * @param pressedButton this pressed button
+     */
     public void removeOneOption(View pressedButton) {
         ArrayList<Integer> wrongOptions = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
@@ -439,8 +447,6 @@ public class Trivia extends AppCompatActivity
         int listSize = wrongOptions.size();
         int randomIndex = random.nextInt(listSize);
 
-
-
         String optionID = "option" + (wrongOptions.get(randomIndex) + 1);
         int resID = getResources().getIdentifier(optionID, "id", getPackageName());
         View includedLayout = findViewById(resID);
@@ -450,6 +456,10 @@ public class Trivia extends AppCompatActivity
         disableOptionButton(pressedButton);
     }
 
+    /**
+     * Add extra seconds
+     * @param pressedButton this pressed button
+     */
     public void giveExtraSeconds(View pressedButton) {
         int leftTime = Integer.parseInt(progressValue.getText().toString());
         leftTime = (leftTime + 16);
@@ -501,6 +511,9 @@ public class Trivia extends AppCompatActivity
         }.start();
     }
 
+    /**
+     * Stops any previous timers
+     */
     public void stopTimer() {
         // Stop previous countdown timer
         if (countDownTimer != null) {
@@ -617,7 +630,6 @@ public class Trivia extends AppCompatActivity
                 //Connect to our url
                 connection.connect();
                 int responseCode = connection.getResponseCode();
-
 
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     //Create a new InputStreamReader
@@ -776,39 +788,37 @@ public class Trivia extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Load all shared preferences
+     */
     public void loadPreferences() {
         currentUserPrefs = new UserPrefs();
-
         currentUserPrefs.setName(pref.getString("user_name", ""));
         currentUserPrefs.setEmail(pref.getString("user_email", ""));
         currentUserPrefs.setCategories(pref.getString("user_categories", ""));
         currentUserPrefs.setDifficulty(pref.getString("user_difficulty", ""));
         currentUserPrefs.setTypes(pref.getString("user_question_types", ""));
-
-
     }
 
+
+    /**
+     * Clear all stored preferences
+     */
     public void clearPreferences() {
         editor.putString("user_name", "");
         editor.putString("user_email", "");
-
-        // Clear difficulty choices
         editor.putString("user_difficulty", "");
-
-        // Clear category selections
         editor.putString("user_categories", "");
-
-        // Clear question types
         editor.putString("user_question_types", "");
-
-        // Clear image base64 string
         editor.putString("user_image", "");
-
+        editor.putString("user_music", "");
         editor.apply();
     }
 
+    /**
+     * Sign out from Firebase and Google
+     */
     private void signOut() {
-        // Firebase sign out
         mAuth.signOut();
 
         // Google sign out
@@ -831,6 +841,9 @@ public class Trivia extends AppCompatActivity
         return String.format(getString(ID));
     }
 
+    /**
+     * Redirect to login activity
+     */
     public void sendToLogin() {
         Intent intent = new Intent(Trivia.this, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -894,10 +907,13 @@ public class Trivia extends AppCompatActivity
                 editor.putString("user_image", encodeToBase64(result));
                 editor.apply();
             }
-//            simpleWaitDialog.dismiss();
-
         }
 
+        /**
+         * Download bitmap image form URL
+         * @param  photoUrl of the image
+         * @return download bitmap image
+         */
         private Bitmap downloadBitmap(String photoUrl) {
             // initilize the default HTTP client object
             URL url;
@@ -911,10 +927,8 @@ public class Trivia extends AppCompatActivity
                 return null;
             }
 
-
-            //forming a HttoGet request
+            // Forming a HttpGet request
             try {
-
                 connection.setRequestMethod("GET");
                 connection.connect();
                 int statusCode = connection.getResponseCode();

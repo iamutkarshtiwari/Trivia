@@ -17,6 +17,8 @@ public class UserPrefs {
     public ArrayList<Integer> categories;
     public ArrayList<String> types;
     int categoryValues[] = {27, 25, 16, 10, 32, 26, 29, 18, 11, 30, 9, 22, 23, 31, 19, 12, 13, 20, 24, 17, 21, 14, 28, 15};
+    String difficultyValues[] = {"easy", "medium", "hard"};
+    String typeValues[] = {"multiple", "boolean"};
 
     public UserPrefs() {
     }
@@ -44,8 +46,14 @@ public class UserPrefs {
 
     public void setDifficulty(String diff) {
         ArrayList<String> result = new ArrayList<>();
-        result.addAll(Arrays.asList(diff.split(",")));
-        difficulty = result;
+        int index = 0;
+        for (String value: Arrays.asList(diff.split(",")) {
+            if (value.equalsIgnoreCase("true")) {
+                result.add(difficultyValues[index]);
+            }
+            index++;
+        }
+        this.difficulty = result;
     }
 
     public ArrayList<Integer> getCategories() {
@@ -70,7 +78,13 @@ public class UserPrefs {
 
     public void setTypes(String types) {
         ArrayList<String> result = new ArrayList<>();
-        result.addAll(Arrays.asList(types.split(",")));
+        int index = 0;
+        for (String bool : Arrays.asList(types.split(","))) {
+            if (bool.equalsIgnoreCase("true")) {
+                result.add(typeValues[index]);
+            }
+            index++;
+        }
         this.types = result;
     }
 }
