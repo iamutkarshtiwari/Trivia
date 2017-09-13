@@ -11,7 +11,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/preferencesBG">
+        android:background="@color/optionBackground">
 
         <!--Difficulty setting section-->
         <TextView
@@ -20,7 +20,7 @@
             android:layout_height="50dp"
             android:text="@string/difficulty"
             android:gravity="center"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:layout_marginLeft="16dp"/>
 
         <View
@@ -50,34 +50,6 @@
             android:layout_width="match_parent"
             android:layout_below="@id/medium"/>
 
-        <!--Question Type settings-->
-        <TextView
-            android:id="@+id/types_label"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="@string/type"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginLeft="16dp"
-            android:layout_below="@id/hard"/>
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/preferencesDivider"
-            android:layout_below="@id/types_label" />
-
-        <include layout="@layout/preferences_row"
-            android:id="@+id/bool"
-            android:layout_height="50dp"
-            android:layout_width="match_parent"
-            android:layout_marginTop="1dp"
-            android:layout_below="@id/types_label"/>
-
-        <include layout="@layout/preferences_row"
-            android:id="@+id/multiple"
-            android:layout_height="50dp"
-            android:layout_width="match_parent"
-            android:layout_below="@id/bool"/>
 
         <!--App Settings section-->
         <TextView
@@ -85,10 +57,10 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:text="@string/app_settings"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:gravity="center"
             android:layout_marginLeft="16dp"
-            android:layout_below="@id/multiple"/>
+            android:layout_below="@id/hard"/>
 
         <View
             android:layout_width="match_parent"

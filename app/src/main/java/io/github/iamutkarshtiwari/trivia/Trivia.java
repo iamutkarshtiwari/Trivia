@@ -274,6 +274,9 @@ public class Trivia extends AppCompatActivity
      * Shows next question
      */
     public void nextQuestion() {
+        String params = "";
+        String difficulty = "";
+
         toggleNetworkMessage(View.INVISIBLE);
         toggleMultiQuestionDetailsVisibility(View.INVISIBLE);
         toggleBooleanQuestionDetailsVisibility(View.INVISIBLE);
@@ -288,16 +291,20 @@ public class Trivia extends AppCompatActivity
         // Stop previous timers
         stopTimer();
 
-        String params = "";
         if (currentUserPrefs.getCategories().size() > 0) {
             params += "&category=" + getRandomItem(currentUserPrefs.getCategories());
         }
         if (currentUserPrefs.getDifficulty().size() > 0) {
-            params += "&difficulty=" + getRandomItem(currentUserPrefs.getDifficulty());
+            difficulty = getRandomItem(currentUserPrefs.getDifficulty());
+            params += "&difficulty=" + difficulty;
         }
         if (currentUserPrefs.getTypes().size() > 0) {
-            String type = getRandomItem(currentUserPrefs.getTypes());
-            params += "&type=" + type;
+            if (difficulty.equalsIgnoreCase("hard")) {
+                params += "&type=" + "multiple";
+            } else {
+                String type = getRandomItem(currentUserPrefs.getTypes());
+                params += "&type=" + type;
+            }
         }
 
         final String url = TRIVIA_URL + params;
@@ -857,7 +864,6 @@ public class Trivia extends AppCompatActivity
         currentUserPrefs.setEmail(pref.getString("user_email", ""));
         currentUserPrefs.setCategories(pref.getString("user_categories", ""));
         currentUserPrefs.setDifficulty(pref.getString("user_difficulty", ""));
-        currentUserPrefs.setTypes(pref.getString("user_question_types", ""));
     }
 
 
@@ -869,7 +875,6 @@ public class Trivia extends AppCompatActivity
         editor.putString("user_email", "");
         editor.putString("user_difficulty", "");
         editor.putString("user_categories", "");
-        editor.putString("user_question_types", "");
         editor.putString("user_image", "");
         editor.putString("user_music", "");
         editor.apply();

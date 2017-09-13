@@ -42,7 +42,7 @@ public class Preferences extends AppCompatActivity {
     private FirebaseUser user;
 
     private final int LABELS[][] = {{R.id.easy, R.string.easy}, {R.id.medium, R.string.medium}, {R.id.hard, R.string.hard},
-            {R.id.multiple, R.string.multiple}, {R.id.bool, R.string.true_false}, {R.id.music, R.string.music}};
+            {R.id.music, R.string.music}};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +86,6 @@ public class Preferences extends AppCompatActivity {
         ArrayList<String> selections = new ArrayList<>();
         // NOTE: This is the exact order to be followed while read/write
         loadedSelection += pref.getString("user_difficulty", "");
-        loadedSelection += pref.getString("user_question_types", "");
         loadedSelection += pref.getString("user_music", "");
         selections.addAll(Arrays.asList(loadedSelection.split(",")));
 
@@ -117,11 +116,6 @@ public class Preferences extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_option)), Toast.LENGTH_SHORT).show();
                             toggleButton.setChecked(!toggleButton.isChecked());
                         }
-                    } else if (id == LABELS[3][0] || id == LABELS[4][0]) {
-                        if(!isAtleastOneTypeEnabled()) {
-                            Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_option)), Toast.LENGTH_SHORT).show();
-                            toggleButton.setChecked(!toggleButton.isChecked());
-                        }
                     }
                 }
             });
@@ -134,16 +128,6 @@ public class Preferences extends AppCompatActivity {
     public boolean isAtleastOneDifficultyEnabled() {
         boolean result = false;
         for (int i = 0; i < 3; i++) {
-            View easyRow = findViewById(LABELS[i][0]);
-            ToggleButton toggleButton = (ToggleButton) easyRow.findViewById(R.id.toggleButton);
-            result |= toggleButton.isChecked();
-        }
-        return result;
-    }
-
-    public boolean isAtleastOneTypeEnabled() {
-        boolean result = false;
-        for (int i = 3; i < 5; i++) {
             View easyRow = findViewById(LABELS[i][0]);
             ToggleButton toggleButton = (ToggleButton) easyRow.findViewById(R.id.toggleButton);
             result |= toggleButton.isChecked();
@@ -174,15 +158,13 @@ public class Preferences extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get user value
                 User user = dataSnapshot.getValue(User.class);
-                if (user.getTypes() != null && user.getDifficulty() != null && user.getMusic() != null) {
+                if (user.getDifficulty() != null && user.getMusic() != null) {
                     String data = "";
                     // NOTE: This is the exact order to be followed while read/write
                     data += user.getDifficulty();
-                    data += user.getTypes();
                     data += user.getMusic();
 
                     editor.putString("user_difficulty", user.getTypes());
-                    editor.putString("user_question_types", user.getTypes());
                     editor.putString("user_music", user.getMusic());
                     editor.commit();
 
@@ -250,10 +232,7 @@ public class Preferences extends AppCompatActivity {
             if (i == 2) {
                 editor.putString("user_difficulty", result);
                 result = "";
-            } else if (i == 4) {
-                editor.putString("user_question_types", result);
-                result = "";
-            } else if (i == 5){
+            } else if (i == 3){
                 editor.putString("user_music", result);
                 result = "";
 
@@ -269,7 +248,6 @@ public class Preferences extends AppCompatActivity {
         try {
             DatabaseReference ref = mDatabase.child("users").child(user.getUid());
             ref.child("difficulty").setValue(pref.getString("user_difficulty", ""));
-            ref.child("types").setValue(pref.getString("user_question_types", ""));
             ref.child("music").setValue(pref.getString("user_music", ""));
         } catch (Exception e) {
             Log.e("Error", String.format(getString(R.string.firebase_sync_error)));

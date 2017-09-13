@@ -73,18 +73,13 @@ public class UserPrefs {
     }
 
     public ArrayList<String> getTypes() {
+        ArrayList<String> result = new ArrayList<>();
+        result.addAll(Arrays.asList(typeValues));
+        this.types = result;
         return types;
     }
 
-    public void setTypes(String types) {
-        ArrayList<String> result = new ArrayList<>();
-        int index = 0;
-        for (String bool : Arrays.asList(types.split(","))) {
-            if (bool.equalsIgnoreCase("true")) {
-                result.add(typeValues[index]);
-            }
-            index++;
-        }
-        this.types = result;
+    public void setTypes() {
+
     }
 }
