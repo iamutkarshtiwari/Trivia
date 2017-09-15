@@ -513,8 +513,7 @@ public class Trivia extends AppCompatActivity
         String optionID = "option" + (wrongOptions.get(randomIndex) + 1);
         int resID = getResources().getIdentifier(optionID, "id", getPackageName());
         View includedLayout = findViewById(resID);
-        Button option = (Button)includedLayout.findViewById(R.id.option);
-        option.setVisibility(View.INVISIBLE);
+        includedLayout.setVisibility(View.INVISIBLE);
 
         disableOptionButton(pressedButton);
     }
