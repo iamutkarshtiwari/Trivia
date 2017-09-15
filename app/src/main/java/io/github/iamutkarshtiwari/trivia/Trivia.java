@@ -492,6 +492,9 @@ public class Trivia extends AppCompatActivity
 
         // Disable clicks on option until further set of questions
         enableClickOnOptions(false);
+        // Disable remove-option and extra-time options
+        disableOptionButton(removeOneBtn);
+        disableOptionButton(extraSecondsBtn);
 
     }
 
