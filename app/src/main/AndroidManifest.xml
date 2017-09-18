@@ -10,27 +10,27 @@
 
     <application
         android:allowBackup="true"
-        android:screenOrientation="portrait"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/NoActionBarRegistration"
             android:screenOrientation="portrait"
+            android:theme="@style/NoActionBarRegistration"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".SignupActivity"
-            android:theme="@style/NoActionBarRegistration"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/NoActionBarRegistration" />
         <activity
             android:name=".Trivia"
             android:label="@string/app_name"
-            android:theme="@style/NoActionBar"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -39,11 +39,15 @@
         </activity>
         <activity
             android:name=".Category"
-            android:label="@string/categories"
-            android:theme="@style/NoActionBar"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Preferences"
+            android:label="@string/fav_categories"
+            android:screenOrientation="portrait"
+            android:theme="@style/NoActionBar" />
+        <activity
+            android:name=".Preferences"
             android:label="@string/preferences"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Profile"
+            android:label="@string/profile"
             android:screenOrientation="portrait"/>
     </application>
 

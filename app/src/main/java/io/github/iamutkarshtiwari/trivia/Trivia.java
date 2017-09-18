@@ -21,14 +21,20 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -53,6 +59,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.wang.avi.AVLoadingIndicatorView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -75,6 +82,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import io.github.iamutkarshtiwari.trivia.models.CustomList;
 import io.github.iamutkarshtiwari.trivia.models.User;
 import io.github.iamutkarshtiwari.trivia.models.UserPrefs;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
 
 public class Trivia extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener,
@@ -82,10 +90,12 @@ public class Trivia extends AppCompatActivity
 
 
     private final String TRIVIA_URL = "https://opentdb.com/api.php?amount=1";
+    private final String JSERVICE_URL = "http://jservice.io/api/random?count=1";
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
     private static final int RC_CATEGORY = 9003;
     private static final int RC_PREFERENCE = 9004;
+    private static final int RC_PROFILE = 9005;
     private static final String MY_PREFS_NAME = "Trivia";
 
     private static String correctOption = "";
@@ -93,6 +103,7 @@ public class Trivia extends AppCompatActivity
     private static boolean isCurrentQuestionBooleanStyled = false;
     private static boolean isInFront = true;
     private static int correctOptionIndex = -1;
+    private static String hitURL = "";
     private static LinearLayout nextQuestionBtn, removeOneBtn, extraSecondsBtn;
 
     private FirebaseAuth mAuth;
@@ -114,7 +125,7 @@ public class Trivia extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
@@ -157,6 +168,33 @@ public class Trivia extends AppCompatActivity
         extraSecondsBtn = (LinearLayout) findViewById(R.id._15_seconds);
         extraSecondsBtn.setOnClickListener(this);
 
+        // EditText
+        final EditText editText = (EditText) findViewById(R.id.written_option);
+        editText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    compareAnswers(editText.getText().toString());
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Hide indication symbol
+                toggleTextTypeSymbol(View.INVISIBLE);
+            }
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+            }
+        });
+
+
         // Load the countdown timer
         Animation an = new RotateAnimation(0.0f, 270.0f, 90f, 90f);
         an.setFillAfter(true);
@@ -190,6 +228,7 @@ public class Trivia extends AppCompatActivity
     public void onResume() {
         super.onResume();
         isInFront = true;
+        toggleQuestionPanelVisibilty(View.VISIBLE);
     }
 
     @Override
@@ -215,6 +254,8 @@ public class Trivia extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_profile) {
+            Intent intent = new Intent(getApplicationContext(), Profile.class);
+            startActivityForResult(intent, RC_PROFILE);
         } else if (id == R.id.nav_leaderboard) {
         } else if (id == R.id.nav_category) {
             Intent intent = new Intent(getApplicationContext(), Category.class);
@@ -277,11 +318,17 @@ public class Trivia extends AppCompatActivity
         String params = "";
         String difficulty = "";
 
+        // Hide network error message
         toggleNetworkMessage(View.INVISIBLE);
-        toggleMultiQuestionDetailsVisibility(View.INVISIBLE);
-        toggleBooleanQuestionDetailsVisibility(View.INVISIBLE);
-        findViewById(R.id.category).setVisibility(View.INVISIBLE);
-        resetOptionAlpha();
+
+        // Hide all question details
+        toggleQuestionAndCategoryVisibilty(View.INVISIBLE);
+
+        // Hide all option views
+        toggleMultiChoiceOptionView(View.INVISIBLE);
+        toggleTextTypeView(View.INVISIBLE);
+        toggleTextTypeSymbol(View.INVISIBLE);
+        toggleBooleanChoiceOptionView(View.INVISIBLE);
 
         // Disable remove-option and extra-time options
         disableOptionButton(removeOneBtn);
@@ -307,8 +354,40 @@ public class Trivia extends AppCompatActivity
             }
         }
 
-        final String url = TRIVIA_URL + params;
-        Log.e("URI QUESTION ", url);
+
+        Random random = new Random();
+        int weight = random.nextInt(10) + 1;
+        if (difficulty.equalsIgnoreCase("easy")) {
+            if (weight < 7) {
+                // Question from TRIVIA DB
+                hitURL = TRIVIA_URL;
+            } else {
+                // Question from JSERVICE.IO
+                hitURL = JSERVICE_URL;
+                params = "";
+            }
+        } else if (difficulty.equalsIgnoreCase("medium")) {
+            if (weight <= 5) {
+                // Question from TRIVIA DB
+                hitURL = TRIVIA_URL;
+            } else {
+                // Question from JSERVICE.IO
+                hitURL = JSERVICE_URL;
+                params = "";
+            }
+        } else {
+            if (weight <= 3) {
+                // Question from TRIVIA DB
+                hitURL = TRIVIA_URL;
+            } else {
+                // Question from JSERVICE.IO
+                hitURL = JSERVICE_URL;
+                params = "";
+            }
+        }
+
+        String url = hitURL + params;
+        Log.e("URL HIT: " , url);
         new HttpGetRequest().execute(url);
     }
 
@@ -326,6 +405,23 @@ public class Trivia extends AppCompatActivity
         return list.get(randomIndex);
     }
 
+    /**
+     * Replaces & with "and"
+     * Remove articles (a|an|the)
+     * Removes white spaces
+     * Removes special characters
+     * @param str to be sanitized
+     * @return sanitized string
+     */
+    public String sanitizeString(String str) {
+        str = str.replaceAll("&", " and ");
+        str = str.replaceAll("[^\\w\\s]", "");
+        str = str.replaceAll("[\\s+]", " ");
+        str = str.replaceAll("^(the|a|an) ]", "");
+        str = str.replaceAll("[\\?+$/]", "");
+        str = str.trim();
+        return str;
+    }
 
     /**
      * Parse the JSON response from triviaDB
@@ -338,37 +434,52 @@ public class Trivia extends AppCompatActivity
             String type = "";
             options = new ArrayList<>();
             try {
-                // If a blank response, find next question
-                if (jsonObject.getJSONArray("results").length() == 0) {
-                    nextQuestion();
-                    return;
-                }
-                Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
-                question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
-                category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
-
-                if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
-                    category = category.substring(15);
-                } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
-                    category = category.substring(9);
-                }
-
-                type = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("type")).text();
-                correctOption = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer")).text();
-                options.add(correctOption);
-
-                if (!type.equalsIgnoreCase("boolean")) {
-                    for (int i = 1; i < 4; i++) {
-                        options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1)).text());
+                // If question is served from OPEN_TRIVIA DB
+                if (hitURL.equalsIgnoreCase(TRIVIA_URL)) {
+                    // If a blank response, find next question
+                    if (jsonObject.getJSONArray("results").length() == 0) {
+                        nextQuestion();
+                        return;
                     }
+                    Log.e("JSON ", jsonObject.getJSONArray("results").getJSONObject(0).getString("question"));
+                    question = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("question")).text();
+                    category = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("category")).text();
+
+                    if (category.length() > 15 && category.substring(0, 13).equalsIgnoreCase("Entertainment")) {
+                        category = category.substring(15);
+                    } else if (category.length() > 8 && category.substring(0, 8).equalsIgnoreCase("Science:")) {
+                        category = category.substring(9);
+                    }
+
+                    type = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("type")).text();
+                    correctOption = Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getString("correct_answer")).text();
+                    options.add(correctOption);
+
+                    if (!type.equalsIgnoreCase("boolean")) {
+                        for (int i = 1; i < 4; i++) {
+                            options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(i - 1)).text());
+                        }
+                    } else {
+                        options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(0)).text());
+                    }
+                    Collections.shuffle(options);
                 } else {
-                    options.add(Jsoup.parse(jsonObject.getJSONArray("results").getJSONObject(0).getJSONArray("incorrect_answers").getString(0)).text());
+                    // If quesiton is served from JSERVICE.IO
+                    if (jsonObject.getString("question").length() == 0) {
+                        nextQuestion();
+                        return;
+                    } else {
+                        question = Jsoup.parse(jsonObject.getString("question")).text();
+                        category = Jsoup.parse(jsonObject.getJSONObject("category").getString("title")).text();
+                        correctOption = (Jsoup.parse(jsonObject.getString("answer")).text()).toLowerCase();
+                        Log.e("CORRECT OPTION: ", correctOption);
+                    }
                 }
-                Collections.shuffle(options);
 
             } catch (JSONException e) {
                 Log.e("ERROR: ", "Could not parse question");
                 // Hide question-option panels
+                stopTimer();
                 toggleQuestionPanelVisibilty(View.INVISIBLE);
                 toggleNetworkMessage(View.VISIBLE);
                 return;
@@ -379,67 +490,71 @@ public class Trivia extends AppCompatActivity
 
             TextView categoryView = (TextView) findViewById(R.id.category);
             categoryView.setText(category);
-            if (!type.equalsIgnoreCase("boolean")) {
-                for (int i = 0; i < 4; i++) {
-                    String optionID = "option" + (i + 1);
-                    int resID = getResources().getIdentifier(optionID, "id", getPackageName());
 
-                    if (options.get(i).equalsIgnoreCase(correctOption)) {
-                        correctOptionIndex = i;
+            if (hitURL.equalsIgnoreCase(TRIVIA_URL)) {
+                if (!type.equalsIgnoreCase("boolean")) {
+                    for (int i = 0; i < 4; i++) {
+                        String optionID = "option" + (i + 1);
+                        int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+
+                        if (options.get(i).equalsIgnoreCase(correctOption)) {
+                            correctOptionIndex = i;
+                        }
+
+                        View includedLayout = findViewById(resID);
+                        Button option = (Button) includedLayout.findViewById(R.id.option);
+                        option.setText(options.get(i));
+
+                        // Fix the alpha and visibility from previous answer result
+                        includedLayout.setAlpha(1.0f);
+                        includedLayout.setVisibility(View.VISIBLE);
+
+                        ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                        symbol.setVisibility(View.INVISIBLE);
                     }
+                    enableOptionButton(removeOneBtn);
+                } else {
+                    for (int i = 0; i < 2; i++) {
+                        String optionID = "boolean" + (i + 1);
+                        int resID = getResources().getIdentifier(optionID, "id", getPackageName());
 
-                    View includedLayout = findViewById(resID);
-                    Button option = (Button) includedLayout.findViewById(R.id.option);
-                    option.setText(options.get(i));
-                    // Fix the alpha and visibility from previous answer result
-                    includedLayout.setAlpha(1.0f);
-                    includedLayout.setVisibility(View.VISIBLE);
+                        if (options.get(i).equalsIgnoreCase(correctOption)) {
+                            correctOptionIndex = i;
+                        }
 
-                    ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
-                    symbol.setVisibility(View.INVISIBLE);
-                }
-                // Display multi choice questions
-                toggleMultiQuestionDetailsVisibility(View.VISIBLE);
-            }  else {
-                for (int i = 0; i < 2; i++) {
-                    String optionID = "boolean" + (i + 1);
-                    int resID = getResources().getIdentifier(optionID, "id", getPackageName());
+                        View includedLayout = findViewById(resID);
+                        Button option = (Button) includedLayout.findViewById(R.id.option);
+                        option.setText(options.get(i));
 
-                    if (options.get(i).equalsIgnoreCase(correctOption)) {
-                        correctOptionIndex = i;
+                        // Fix the alpha and visibility from previous answer result
+                        includedLayout.setAlpha(1.0f);
+                        includedLayout.setVisibility(View.VISIBLE);
+
+                        ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
+                        symbol.setVisibility(View.INVISIBLE);
                     }
-
-                    View includedLayout = findViewById(resID);
-                    Button option = (Button) includedLayout.findViewById(R.id.option);
-                    option.setText(options.get(i));
-                    // Fix the alpha and visibility from previous answer result
-                    includedLayout.setAlpha(1.0f);
-                    includedLayout.setVisibility(View.VISIBLE);
-
-                    ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
-                    symbol.setVisibility(View.INVISIBLE);
                 }
-                toggleBooleanQuestionDetailsVisibility(View.VISIBLE);
+
+                // Display question details
+                toggleQuestionPanelVisibilty(View.VISIBLE);
+                enableClickOnOptions(true);
+                if (type.equalsIgnoreCase("boolean")) {
+                    toggleBooleanChoiceOptionView(View.VISIBLE);
+                } else {
+                    toggleMultiChoiceOptionView(View.VISIBLE);
+                }
+            } else {
+                toggleTextTypeView(View.VISIBLE);
             }
 
-            // Display question details
             toggleNetworkMessage(View.INVISIBLE);
             toggleQuestionPanelVisibilty(View.VISIBLE);
-            enableClickOnOptions(true);
-            if (type.equalsIgnoreCase("boolean")) {
-                toggleMultiTypeView(false);
-            } else {
-                toggleMultiTypeView(true);
-            }
-
-            findViewById(R.id.category).setVisibility(View.VISIBLE);
+            toggleQuestionAndCategoryVisibilty(View.VISIBLE);
             enableOptionButton(extraSecondsBtn);
-            enableOptionButton(removeOneBtn);
             enableOptionButton(nextQuestionBtn);
 
             // Start countdown timer
             startTimer(41);
-
         } else {
             // Hide question-option panels
             toggleQuestionPanelVisibilty(View.INVISIBLE);
@@ -448,16 +563,140 @@ public class Trivia extends AppCompatActivity
         }
     }
 
-    public void toggleMultiTypeView(boolean flag) {
-        int visibilityMulti = flag ? View.VISIBLE : View.INVISIBLE;
-        int visibilityBoolean = flag ? View.INVISIBLE : View.VISIBLE;
-        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
-        optionPanel.setVisibility(visibilityMulti);
 
-        TableLayout booleanOptionPanel = (TableLayout) findViewById(R.id.boolean_option_grid);
-        booleanOptionPanel.setVisibility(visibilityBoolean);
+    /**
+     * Asyncronous class to make HTTP request to Trivia questions API
+     */
+    public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
+        public static final String REQUEST_METHOD = "GET";
+        public static final int READ_TIMEOUT = 10000;
+        public static final int CONNECTION_TIMEOUT = 10000;
+        TextView networkText;
+        AVLoadingIndicatorView spinner;
+        @Override
+        protected void onPreExecute() {
+            spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
+            spinner.setVisibility(View.VISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected JSONObject doInBackground(String... params){
+            String stringUrl = params[0];
+            String result;
+            String inputLine;
+            JSONObject jsonObject = null;
+            try {
+                //Create a URL object holding our url
+                URL myUrl = new URL(stringUrl);
+                //Create a connection
+                HttpURLConnection connection =(HttpURLConnection)
+                        myUrl.openConnection();
+                //Set methods and timeouts
+                connection.setRequestMethod(REQUEST_METHOD);
+                connection.setReadTimeout(READ_TIMEOUT);
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+
+                //Connect to our url
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    //Create a new InputStreamReader
+                    InputStreamReader streamReader = new
+                            InputStreamReader(connection.getInputStream(), "UTF-8");
+                    //Create a new buffered reader and String Builder
+                    BufferedReader reader = new BufferedReader(streamReader);
+                    StringBuilder stringBuilder = new StringBuilder();
+                    //Check if the line we are reading is not null
+                    while ((inputLine = reader.readLine()) != null) {
+                        stringBuilder.append(inputLine);
+                    }
+                    //Close our InputStream and Buffered reader
+                    reader.close();
+                    streamReader.close();
+                    //Set our result equal to our stringBuilder
+                    result = stringBuilder.toString();
+                    if (hitURL.equalsIgnoreCase(JSERVICE_URL)) {
+                        JSONArray jsonArray = new JSONArray(result);
+                        jsonObject = jsonArray.getJSONObject(0);
+                    } else {
+                        jsonObject = new JSONObject(result);
+                    }
+
+                } else {
+                    jsonObject = null;
+                }
+
+            }
+            catch(Exception e){
+                Log.e(e.getClass().getName(), e.getMessage(), e);
+                Log.e("ERROR :", "Error connecting to network");
+                jsonObject = null;
+            }
+            return jsonObject;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject result){
+            spinner.setVisibility(View.INVISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
+            retrieveQuestion(result);
+        }
     }
 
+    public void toggleQuestionAndCategoryVisibilty(int flag) {
+        TextView questionView = (TextView) findViewById(R.id.question);
+        questionView.setVisibility(flag);
+
+        TextView categoryView = (TextView) findViewById(R.id.category);
+        categoryView.setVisibility(flag);
+    }
+
+    /**
+     * Toggles editText panel visibility
+     * @param flag
+     */
+    public void toggleTextTypeView(int flag) {
+        EditText writtenAnswer = (EditText) findViewById(R.id.written_option);
+        writtenAnswer.setVisibility(flag);
+        writtenAnswer.setText("");
+
+        TextView editTextLabel = (TextView) findViewById(R.id.edittext_label);
+        editTextLabel.setVisibility(flag);
+    }
+
+    /**
+     * Toggle indicator symbol over editText
+     * @param flag
+     * @return indicator symbol imageView
+     */
+    public ImageView toggleTextTypeSymbol(int flag) {
+        ImageView answerSymbol = (ImageView) findViewById(R.id.edittext_symbol);
+        answerSymbol.setVisibility(flag);
+        return answerSymbol;
+    }
+
+
+    /**
+     * Toggles multiple choice option visibility
+     * @param flag
+     */
+    public void toggleMultiChoiceOptionView(int flag) {
+        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
+        optionPanel.setVisibility(flag);
+
+    }
+
+    public void toggleBooleanChoiceOptionView(int flag) {
+        TableLayout booleanOptionPanel = (TableLayout) findViewById(R.id.boolean_option_grid);
+        booleanOptionPanel.setVisibility(flag);
+    }
+
+    /**
+     * Checks selected answer from provided options
+     * @param view
+     */
     public void checkAnswer(View view) {
         Log.e("CLICK : ", view.getResources().getResourceName(view.getId()));
         stopTimer();
@@ -496,6 +735,34 @@ public class Trivia extends AppCompatActivity
         disableOptionButton(removeOneBtn);
         disableOptionButton(extraSecondsBtn);
 
+    }
+
+    /**
+     * Does a fuzzy string comparison between entered text
+     * and correct answer
+     * @param enteredText text entered by the user
+     */
+    public void compareAnswers(String enteredText) {
+        int words = correctOption.isEmpty() ? 0 : correctOption.split("\\s+").length;
+        int ratio;
+        if (words == 1) {
+            int ratio1 = FuzzySearch.ratio(sanitizeString(enteredText), sanitizeString(correctOption));
+            ratio = ratio1;
+        } else {
+            int ratio2 = FuzzySearch.partialRatio(sanitizeString(enteredText), sanitizeString(correctOption));
+            int ratio3 = FuzzySearch.weightedRatio(sanitizeString(enteredText), sanitizeString(correctOption));
+            ratio = (ratio2 + ratio3) / 2;
+        }
+
+        Log.e("RATIO: ", ratio+"");
+
+        ImageView symbol = toggleTextTypeSymbol(View.VISIBLE);
+        if ((words == 1 && ratio > 90) || (words > 1 && ratio > 80)) {
+            symbol.setImageDrawable(getResources().getDrawable(R.drawable.right));
+            stopTimer();
+        } else {
+            symbol.setImageDrawable(getResources().getDrawable(R.drawable.wrong));
+        }
     }
 
     /**
@@ -589,18 +856,6 @@ public class Trivia extends AppCompatActivity
     }
 
     /**
-     * Resets alpha values of options to default
-     */
-    public void resetOptionAlpha() {
-        for (int i = 0; i < 4; i++) {
-            String optionID = "option" + (i + 1);
-            int resID = getResources().getIdentifier(optionID, "id", getPackageName());
-            View includedLayout = findViewById(resID);
-            includedLayout.setAlpha(1.0f);
-        }
-    }
-
-    /**
      * Toggels the network error message
      * @param flag to toggle visibility
      */
@@ -609,18 +864,13 @@ public class Trivia extends AppCompatActivity
         networkText.setVisibility(flag);
     }
 
-
     /**
-     * Toggles Question + Options's visibility
+     * Toggles Question panel visibility
      * @param flag to toggle visibility
      */
     public void toggleQuestionPanelVisibilty(int flag) {
-
         RelativeLayout questionPanel = (RelativeLayout) findViewById(R.id.question_panel);
         questionPanel.setVisibility(flag);
-
-        TableLayout optionPanel = (TableLayout) findViewById(R.id.option_grid);
-        optionPanel.setVisibility(flag);
     }
 
     /**
@@ -638,105 +888,11 @@ public class Trivia extends AppCompatActivity
     }
 
     /**
-     * Toggles Question + Options text visibility
-     * @param flag to toggle visibility
-     */
-    public void toggleMultiQuestionDetailsVisibility(int flag) {
-        findViewById(R.id.question).setVisibility(flag);
-        findViewById(R.id.option1).setVisibility(flag);
-        findViewById(R.id.option2).setVisibility(flag);
-        findViewById(R.id.option3).setVisibility(flag);
-        findViewById(R.id.option4).setVisibility(flag);
-    }
-
-    public void toggleBooleanQuestionDetailsVisibility(int flag) {
-        findViewById(R.id.question).setVisibility(flag);
-        findViewById(R.id.boolean1).setVisibility(flag);
-        findViewById(R.id.boolean2).setVisibility(flag);
-    }
-
-    /**
      * Enable clicks on this view
      * @param view of which clicks are to be enabled
      */
     public void enableTouch(View view) {
         view.setClickable(true);
-    }
-
-
-    /**
-     * Asyncronous class to make HTTP request to Trivia questions API
-     */
-    public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
-        public static final String REQUEST_METHOD = "GET";
-        public static final int READ_TIMEOUT = 10000;
-        public static final int CONNECTION_TIMEOUT = 10000;
-        TextView networkText;
-        AVLoadingIndicatorView spinner;
-        @Override
-        protected void onPreExecute() {
-            spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
-            spinner.setVisibility(View.VISIBLE);
-            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected JSONObject doInBackground(String... params){
-            String stringUrl = params[0];
-            String result;
-            String inputLine;
-            JSONObject jsonObject = null;
-            try {
-                //Create a URL object holding our url
-                URL myUrl = new URL(stringUrl);
-                //Create a connection
-                HttpURLConnection connection =(HttpURLConnection)
-                        myUrl.openConnection();
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Connect to our url
-                connection.connect();
-                int responseCode = connection.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    //Create a new InputStreamReader
-                    InputStreamReader streamReader = new
-                            InputStreamReader(connection.getInputStream(), "UTF-8");
-                    //Create a new buffered reader and String Builder
-                    BufferedReader reader = new BufferedReader(streamReader);
-                    StringBuilder stringBuilder = new StringBuilder();
-                    //Check if the line we are reading is not null
-                    while ((inputLine = reader.readLine()) != null) {
-                        stringBuilder.append(inputLine);
-                    }
-                    //Close our InputStream and Buffered reader
-                    reader.close();
-                    streamReader.close();
-                    //Set our result equal to our stringBuilder
-                    result = stringBuilder.toString();
-                    jsonObject = new JSONObject(result);
-
-                } else {
-                    jsonObject = null;
-                }
-
-            }
-            catch(Exception e){
-                Log.e("ERROR :", "Error connecting to network");
-                jsonObject = null;
-            }
-            return jsonObject;
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject result){
-            spinner.setVisibility(View.INVISIBLE);
-            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
-            retrieveQuestion(result);
-        }
     }
 
     @Override
@@ -994,7 +1150,7 @@ public class Trivia extends AppCompatActivity
                 return null;
             }
 
-            // Forming a HttpGet request
+            // Making a Http get request
             try {
                 connection.setRequestMethod("GET");
                 connection.connect();
@@ -1004,7 +1160,6 @@ public class Trivia extends AppCompatActivity
                 if (statusCode != HttpURLConnection.HTTP_OK) {
                     Log.w("ImageDownloader", getStringFromID(R.string.profile_image_error));
                     return null;
-
                 }
 
                 if (connection.getInputStream() != null) {

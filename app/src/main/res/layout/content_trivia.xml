@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/trivia_scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     tools:context="io.github.iamutkarshtiwari.trivia.Trivia"
     tools:ignore="NestedWeights">
 
@@ -106,7 +106,7 @@
         <RelativeLayout
             android:id="@+id/question_panel"
             android:layout_width="wrap_content"
-            android:layout_height="170dp"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginTop="90dp"
@@ -127,7 +127,7 @@
             <TextView
                 android:id="@+id/question"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_below="@id/category"
                 android:layout_marginBottom="16dp"
                 android:layout_marginLeft="16dp"
@@ -148,6 +148,7 @@
             android:layout_height="210dp"
             android:layout_below="@id/question_panel"
             android:layout_marginTop="16dp"
+            android:visibility="invisible"
             android:elevation="2dp">
 
             <TableRow
@@ -251,7 +252,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="64dp"
             android:elevation="2dp"
-            android:visibility="visible"
+            android:visibility="invisible"
             app:indicatorColor="@color/black"
             app:indicatorName="LineScalePulseOutIndicator" />
 
@@ -262,6 +263,7 @@
             android:text="@string/loading_question"
             android:elevation="2dp"
             android:textColor="@color/black"
+            android:visibility="invisible"
             android:layout_below="@id/spinner"
             android:layout_centerHorizontal="true"/>
 
@@ -279,13 +281,50 @@
             android:textColor="@color/lightGray"
             android:visibility="invisible" />
 
+        <TextView
+            android:id="@+id/edittext_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/question_panel"
+            android:padding="4dp"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/black"
+            android:visibility="invisible"
+            android:layout_marginTop="16dp"
+            android:text="@string/type_your_answer"/>
+
+        <EditText
+            android:id="@+id/written_option"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_below="@id/edittext_label"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="8dp"
+            android:textAlignment="center"
+            android:visibility="invisible"
+            android:elevation="2dp"
+            android:inputType="textNoSuggestions"
+            android:background="@drawable/questions_bg" />
+
+        <ImageView
+            android:id="@+id/edittext_symbol"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignTop="@id/written_option"
+            android:layout_marginTop="-5dp"
+            android:layout_marginRight="-5dp"
+            android:layout_alignRight="@id/written_option"
+            android:elevation="4dp"
+            android:visibility="invisible"
+            android:background="@drawable/right"/>
+
         <LinearLayout
             android:id="@+id/option_panel"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/option_grid"
+            android:layout_height="65dp"
             android:layout_alignBottom="@id/optionBackground"
-            android:baselineAligned="false"
             android:layout_marginTop="16dp"
             android:orientation="horizontal">
 
@@ -384,4 +423,4 @@
     </RelativeLayout>
 
 
-</ScrollView>
+</android.support.v4.widget.NestedScrollView>

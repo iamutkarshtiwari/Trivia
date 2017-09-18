@@ -33,6 +33,7 @@
     <string name="creating_account">Creating account&#8230;</string>
     <string name="profile">Profile</string>
     <string name="categories">Categories</string>
+    <string name="fav_categories">Favourite Categories</string>
     <string name="difficulty">Difficulty</string>
     <string name="type">Type</string>
     <string name="leaderboard">Leaderboard</string>
@@ -74,5 +75,8 @@
     <string name="app_lang">App Language</string>
     <string name="at_least_one_option">At least one option should be enabled</string>
     <string name="at_least_one_category">At leaset one category should be selected</string>
+    <string name="type_your_answer">Type your answer below</string>
+    <string name="_1000">1000</string>
+    <string name="accuracy">Accuracy</string>
 
 </resources>
