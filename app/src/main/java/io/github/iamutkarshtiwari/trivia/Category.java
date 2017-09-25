@@ -88,10 +88,6 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         categoryListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         categoryListView.setAdapter(categoryAdapter);
 
-        // Save button
-        saveButton = (Button) findViewById(R.id.save);
-        saveButton.setOnClickListener(this);
-
         // Attach listener to selectAll button
         Button selectAll = (Button) findViewById(R.id.select_all);
         selectAll.setOnClickListener(this);
@@ -104,16 +100,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
     public void onClick(View view) {
         int viewID = view.getId();
 
-        if (viewID == R.id.save) {
-            if (!isAreAllCategoriesUnchecked()) {
-                Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_category)), Toast.LENGTH_SHORT).show();
-                return;
-            }
-            String currentSelections = saveCategoryPreferences();
-            syncCategoryPrefsInFirebase(currentSelections);
-            Toast.makeText(getApplicationContext(), String.format(getString(R.string.category_saved)), Toast.LENGTH_SHORT).show();
-            onBackPressed();
-        } else if (viewID == R.id.select_all) {
+        if (viewID == R.id.select_all) {
             toggleSelectAll();
             areAllCategoriesSelected = !areAllCategoriesSelected;
             updateSelectionButtonLabel();
@@ -135,6 +122,9 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             Toast.makeText(getApplicationContext(), String.format(getString(R.string.at_least_one_category)), Toast.LENGTH_SHORT).show();
             return;
         }
+        String currentSelections = saveCategoryPreferences();
+        syncCategoryPrefsInFirebase(currentSelections);
+        Toast.makeText(getApplicationContext(), String.format(getString(R.string.category_saved)), Toast.LENGTH_SHORT).show();
         super.onBackPressed();
     }
 

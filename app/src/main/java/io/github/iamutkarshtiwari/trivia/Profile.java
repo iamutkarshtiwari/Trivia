@@ -24,7 +24,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import io.github.iamutkarshtiwari.trivia.models.RecyclerViewAdapter;
+import io.github.iamutkarshtiwari.trivia.models.ProfileRecyclerViewAdapter;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class Profile extends AppCompatActivity {
@@ -34,7 +34,7 @@ public class Profile extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ArrayList<String> number;
     private RecyclerView.LayoutManager recyclerViewLayoutManager;
-    private RecyclerViewAdapter recyclerViewHorizontalAdapter;
+    private ProfileRecyclerViewAdapter recyclerViewHorizontalAdapter;
     private LinearLayoutManager horizontalLayout ;
     private View ChildView ;
     private int recyclerViewItemPosition ;
@@ -65,7 +65,7 @@ public class Profile extends AppCompatActivity {
         // Adding items to RecyclerView.
         AddItemsToRecyclerViewArrayList();
 
-        recyclerViewHorizontalAdapter = new RecyclerViewAdapter(number);
+        recyclerViewHorizontalAdapter = new ProfileRecyclerViewAdapter(number);
         horizontalLayout = new LinearLayoutManager(Profile.this, LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(horizontalLayout);
         recyclerView.setAdapter(recyclerViewHorizontalAdapter);

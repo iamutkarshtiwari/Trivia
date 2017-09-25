@@ -96,6 +96,7 @@ public class Trivia extends AppCompatActivity
     private static final int RC_CATEGORY = 9003;
     private static final int RC_PREFERENCE = 9004;
     private static final int RC_PROFILE = 9005;
+    private static final int RC_LEADERBOARD = 9006;
     private static final String MY_PREFS_NAME = "Trivia";
 
     private static String correctOption = "";
@@ -257,6 +258,8 @@ public class Trivia extends AppCompatActivity
             Intent intent = new Intent(getApplicationContext(), Profile.class);
             startActivityForResult(intent, RC_PROFILE);
         } else if (id == R.id.nav_leaderboard) {
+            Intent intent = new Intent(getApplicationContext(), Leaderboard.class);
+            startActivityForResult(intent, RC_LEADERBOARD);
         } else if (id == R.id.nav_category) {
             Intent intent = new Intent(getApplicationContext(), Category.class);
             startActivityForResult(intent, RC_CATEGORY);
@@ -367,7 +370,7 @@ public class Trivia extends AppCompatActivity
                 params = "";
             }
         } else if (difficulty.equalsIgnoreCase("medium")) {
-            if (weight <= 5) {
+            if (weight <= 4) {
                 // Question from TRIVIA DB
                 hitURL = TRIVIA_URL;
             } else {
@@ -376,7 +379,7 @@ public class Trivia extends AppCompatActivity
                 params = "";
             }
         } else {
-            if (weight <= 3) {
+            if (weight <= 2) {
                 // Question from TRIVIA DB
                 hitURL = TRIVIA_URL;
             } else {

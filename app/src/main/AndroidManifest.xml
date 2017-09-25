@@ -46,9 +46,13 @@
             android:name=".Preferences"
             android:label="@string/preferences"
             android:screenOrientation="portrait" />
-        <activity android:name=".Profile"
+        <activity
+            android:name=".Profile"
             android:label="@string/profile"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
+        <activity android:name=".Leaderboard"
+            android:label="@string/leaderboard">
+        </activity>
     </application>
 
 </manifest>

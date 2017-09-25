@@ -16,7 +16,7 @@ import io.github.iamutkarshtiwari.trivia.R;
 
 
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.MyView> {
+public class ProfileRecyclerViewAdapter extends RecyclerView.Adapter<ProfileRecyclerViewAdapter.MyView> {
 
     private List<String> list;
 
@@ -37,7 +37,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
 
-    public RecyclerViewAdapter(List<String> horizontalList) {
+    public ProfileRecyclerViewAdapter(List<String> horizontalList) {
         this.list = horizontalList;
     }
 

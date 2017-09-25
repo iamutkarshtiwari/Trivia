@@ -78,5 +78,7 @@
     <string name="type_your_answer">Type your answer below</string>
     <string name="_1000">1000</string>
     <string name="accuracy">Accuracy</string>
+    <string name="rank">Rank</string>
+    <string name="scores">Scores</string>
 
 </resources>
