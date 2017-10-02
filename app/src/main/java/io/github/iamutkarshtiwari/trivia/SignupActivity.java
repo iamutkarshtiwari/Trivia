@@ -37,8 +37,11 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -149,10 +152,19 @@ public class SignupActivity extends AppCompatActivity {
                             createToast(R.string.authentication_failed, Toast.LENGTH_SHORT);
                         } else {
                             progressDialog.dismiss();
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (mDatabase.child("users").child(user.getUid()) == null) {
-                                createUserInFirebase(name, email, user.getUid());
-                            }
+                            final FirebaseUser user = mAuth.getCurrentUser();
+                            mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if (dataSnapshot.getValue() == null) {
+                                        createUserInFirebase(name, email, user.getUid());
+                                    }
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
                             sendToTrivia();
                         }
 

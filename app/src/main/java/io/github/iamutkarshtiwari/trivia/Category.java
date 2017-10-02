@@ -194,7 +194,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
 
     /**
      * Fetches selections from firebase
-     * @param loadedSelection [description]
+     *
      */
     public void fetchCategoryPrefsFromFirebase() {
         // Fetch user category prefs from Firebase
@@ -204,15 +204,17 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get user value
-                User user = dataSnapshot.getValue(User.class);
-                if (user.getCategories() != null) {
-                    //                editor.putString("user_categories", user.getCategories());
-                    loadedSelection.addAll(Arrays.asList(user.getCategories().split(",")));
-                    boolean selections[] = stringBooleanToArrayBoolean(loadedSelection);
-                    categoryAdapter.setCheckedSelections(selections);
-                    categoryAdapter.notifyDataSetChanged();
-                    editor.putString("user_categories", saveCategoryPreferences());
-                    editor.apply();
+                if (dataSnapshot != null) {
+                    User user = dataSnapshot.getValue(User.class);
+                    if (user != null && user.getCategories() != null) {
+                        //                editor.putString("user_categories", user.getCategories());
+                        loadedSelection.addAll(Arrays.asList(user.getCategories().split(",")));
+                        boolean selections[] = stringBooleanToArrayBoolean(loadedSelection);
+                        categoryAdapter.setCheckedSelections(selections);
+                        categoryAdapter.notifyDataSetChanged();
+                        editor.putString("user_categories", saveCategoryPreferences());
+                        editor.apply();
+                    }
                 }
                 progressDialog.dismiss();
             }
