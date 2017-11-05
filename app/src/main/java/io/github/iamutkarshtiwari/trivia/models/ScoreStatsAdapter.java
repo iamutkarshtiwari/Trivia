@@ -1,6 +1,7 @@
 package io.github.iamutkarshtiwari.trivia.models;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +17,12 @@ import io.github.iamutkarshtiwari.trivia.R;
 
 
 
-public class ProfileRecyclerViewAdapter extends RecyclerView.Adapter<ProfileRecyclerViewAdapter.MyView> {
+public class ScoreStatsAdapter extends RecyclerView.Adapter<ScoreStatsAdapter.MyView> {
 
     private List<String> list;
+    private static final String TAG = "TRIVIA";
 
-    public class MyView extends RecyclerView.ViewHolder {
+    public class MyView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public TextView categoryName;
         public TextView answeredQuestion;
@@ -32,12 +34,18 @@ public class ProfileRecyclerViewAdapter extends RecyclerView.Adapter<ProfileRecy
             categoryName = (TextView) view.findViewById(R.id.category_name);
             answeredQuestion = (TextView) view.findViewById(R.id.category_answered);
             totalQuestion = (TextView) view.findViewById(R.id.category_total);
+            view.setOnClickListener(this);
 
+        }
+
+        @Override
+        public void onClick(View view) {
+            Log.d(TAG, "onClick " + getAdapterPosition());
         }
     }
 
 
-    public ProfileRecyclerViewAdapter(List<String> horizontalList) {
+    public ScoreStatsAdapter(List<String> horizontalList) {
         this.list = horizontalList;
     }
 
@@ -45,7 +53,6 @@ public class ProfileRecyclerViewAdapter extends RecyclerView.Adapter<ProfileRecy
     public MyView onCreateViewHolder(ViewGroup parent, int viewType) {
 
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.stats_column, parent, false);
-
         return new MyView(itemView);
     }
 

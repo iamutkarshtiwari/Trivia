@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:fitsSystemWindows="true"
-    tools:context="io.github.iamutkarshtiwari.trivia.Profile"
+    tools:context="io.github.iamutkarshtiwari.trivia.activity.Profile"
     tools:ignore="NestedWeights">
 
     <RelativeLayout
@@ -246,7 +246,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:scrollbars="horizontal" />
+            android:scrollbars="horizontal"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp"
+            android:layout_above="@id/category_stats"
+            android:layout_below="@id/question_panel">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/previous_questions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="horizontal"
+                android:elevation="2dp" />
+
+            <TextView
+                android:id="@+id/empty_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/no_questions_available" />
+
+        </RelativeLayout>
+
+
 
 
     </RelativeLayout>

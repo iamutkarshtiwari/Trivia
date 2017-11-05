@@ -80,5 +80,6 @@
     <string name="accuracy">Accuracy</string>
     <string name="rank">Rank</string>
     <string name="scores">Scores</string>
+    <string name="no_questions_available">Couldn\'t find any questions from last play session</string>
 
 </resources>

@@ -1,4 +1,4 @@
-package io.github.iamutkarshtiwari.trivia;
+package io.github.iamutkarshtiwari.trivia.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,8 +14,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.LeaderboardRecyclerViewAdapter;
-import io.github.iamutkarshtiwari.trivia.models.ProfileRecyclerViewAdapter;
 
 public class Leaderboard extends AppCompatActivity {
 

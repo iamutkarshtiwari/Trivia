@@ -1,21 +1,17 @@
-package io.github.iamutkarshtiwari.trivia;
+package io.github.iamutkarshtiwari.trivia.activity;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -29,8 +25,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
@@ -49,7 +43,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.firebase.auth.ActionCodeResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -63,7 +56,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import org.w3c.dom.Text;
 
 
 import java.io.BufferedReader;
@@ -74,12 +66,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import io.github.iamutkarshtiwari.trivia.models.CustomList;
+import io.github.iamutkarshtiwari.trivia.R;
+import io.github.iamutkarshtiwari.trivia.models.QuestionContract.QuestionEntry;
 import io.github.iamutkarshtiwari.trivia.models.User;
 import io.github.iamutkarshtiwari.trivia.models.UserPrefs;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
@@ -474,7 +465,7 @@ public class Trivia extends AppCompatActivity
                     } else {
                         question = Jsoup.parse(jsonObject.getString("question")).text();
                         category = Jsoup.parse(jsonObject.getJSONObject("category").getString("title")).text();
-                        correctOption = (Jsoup.parse(jsonObject.getString("answer")).text()).toLowerCase();
+                        correctOption = (Jsoup.parse(jsonObject.getString("answer")).text());
                         Log.e("CORRECT OPTION: ", correctOption);
                     }
                 }
@@ -549,6 +540,8 @@ public class Trivia extends AppCompatActivity
             } else {
                 toggleTextTypeView(View.VISIBLE);
             }
+
+            insertQuestion(question, correctOption);
 
             toggleNetworkMessage(View.INVISIBLE);
             toggleQuestionPanelVisibilty(View.VISIBLE);
@@ -766,6 +759,14 @@ public class Trivia extends AppCompatActivity
         } else {
             symbol.setImageDrawable(getResources().getDrawable(R.drawable.wrong));
         }
+    }
+
+
+    private void insertQuestion(String question, String answer) {
+        ContentValues values = new ContentValues();
+        values.put(QuestionEntry.COLUMN_QUESTION, question);
+        values.put(QuestionEntry.COLUMN_CORRECT_ANSWER, answer);
+        getContentResolver().insert(QuestionEntry.CONTENT_URI, values);
     }
 
     /**

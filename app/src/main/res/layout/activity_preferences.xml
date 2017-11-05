@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context="io.github.iamutkarshtiwari.trivia.Preferences"
+    tools:context="io.github.iamutkarshtiwari.trivia.activity.Preferences"
     tools:ignore="NestedWeights">
 
     <RelativeLayout

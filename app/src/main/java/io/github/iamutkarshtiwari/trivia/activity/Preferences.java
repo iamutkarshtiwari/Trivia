@@ -1,11 +1,10 @@
-package io.github.iamutkarshtiwari.trivia;
+package io.github.iamutkarshtiwari.trivia.activity;
 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,11 +25,12 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class Preferences extends AppCompatActivity {
 
-    private static final String MY_PREFS_NAME = "Trivia";
+    private static final String TRIVIA_SETTINGS = "TriviaSettings";
 
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -61,7 +61,7 @@ public class Preferences extends AppCompatActivity {
         user = mAuth.getCurrentUser();
 
         // Preference manager
-        pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        pref = this.getSharedPreferences(TRIVIA_SETTINGS, MODE_PRIVATE);
         editor = pref.edit();
 
         setupLabelsAndPrefs();

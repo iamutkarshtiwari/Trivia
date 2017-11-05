@@ -1,4 +1,4 @@
-package io.github.iamutkarshtiwari.trivia;
+package io.github.iamutkarshtiwari.trivia.activity;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -29,13 +28,14 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.CustomList;
-import io.github.iamutkarshtiwari.trivia.models.CustomList.ViewHolder;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
 public class Category extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String MY_PREFS_NAME = "Trivia";
+    private static final String TRIVIA_SETTINGS = "TriviaSettings";
+    private static final String PREV_QUESTIONS = "PreviousQuestions";
     private static Button saveButton;
     private static ListView categoryListView;
     private boolean areAllCategoriesSelected;
@@ -43,8 +43,10 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
     private static CustomList categoryAdapter;
     public static ProgressDialog progressDialog;
     private FirebaseAuth mAuth;
-    private SharedPreferences pref;
-    private SharedPreferences.Editor editor;
+    private SharedPreferences settingPref;
+    private SharedPreferences prevQuestions;
+    private SharedPreferences.Editor settingPrefEditor;
+    private SharedPreferences.Editor prevQuestionsEditor;
     private NavigationView navigationView;
     private DatabaseReference mDatabase;
     private FirebaseUser user;
@@ -71,8 +73,8 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         user = mAuth.getCurrentUser();
 
         // Preference manager
-        pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-        editor = pref.edit();
+        settingPref = this.getSharedPreferences(TRIVIA_SETTINGS, MODE_PRIVATE);
+        settingPrefEditor = settingPref.edit();
 
         // Load all saved selections
         boolean loadedSelections[] = loadCategoryPreferences();
@@ -180,7 +182,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
      */
     public boolean[] loadCategoryPreferences() {
         ArrayList<String> loadedSelection = new ArrayList<String>();
-        String savedSelections = pref.getString("user_categories", "");
+        String savedSelections = settingPref.getString("user_categories", "");
 
         if (savedSelections.length() > 0) {
             loadedSelection.addAll(Arrays.asList(savedSelections.split(",")));
@@ -212,8 +214,8 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
                         boolean selections[] = stringBooleanToArrayBoolean(loadedSelection);
                         categoryAdapter.setCheckedSelections(selections);
                         categoryAdapter.notifyDataSetChanged();
-                        editor.putString("user_categories", saveCategoryPreferences());
-                        editor.apply();
+                        settingPrefEditor.putString("user_categories", saveCategoryPreferences());
+                        settingPrefEditor.apply();
                     }
                 }
                 progressDialog.dismiss();
@@ -273,14 +275,14 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
             }
         }
         Log.e("Selections: ", currentSelections);
-        editor.putString("user_categories", currentSelections);
-        editor.apply();
+        settingPrefEditor.putString("user_categories", currentSelections);
+        settingPrefEditor.apply();
         return currentSelections;
     }
 
     /**
      * Sync selections with firebase
-     * @param current selections in string format
+     * @param currentSelections selections in string format
      */
     public void syncCategoryPrefsInFirebase(String currentSelections) {
         try {

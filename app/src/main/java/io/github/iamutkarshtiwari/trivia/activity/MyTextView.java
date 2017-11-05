@@ -1,10 +1,12 @@
-package io.github.iamutkarshtiwari.trivia;
+package io.github.iamutkarshtiwari.trivia.activity;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.widget.TextView;
+
+import io.github.iamutkarshtiwari.trivia.R;
 
 /**
  * Created by utkarshtiwari on 8/26/17.

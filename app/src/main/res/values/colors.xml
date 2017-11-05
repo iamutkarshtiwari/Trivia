@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#9C27B0</color>
-    <color name="colorPrimaryDark">#7B1FA2</color>
-    <color name="colorAccent">#baa0e7</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#7986CB</color>
     <color name="startGradient">#3A1C71</color>
     <color name="centreGradient">#D76D77</color>
     <color name="endGradient">#FFAF7B</color>
@@ -12,7 +12,7 @@
     <color name="textBlack">#2F3C44</color>
     <color name="optionBackground">#E4E7EB</color>
     <color name="dimOptions">#F2F3F5</color>
-    <color name="firstOption">#874FCC</color>
+    <color name="firstOption">#5C6BC0</color>
     <color name="secondOption">#5CC4C3</color>
     <color name="thirdOption">#F06970</color>
     <color name="questionPanelDim">#F2F3F5</color>
