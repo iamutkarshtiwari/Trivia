@@ -5,7 +5,7 @@
     android:id="@+id/trivia_scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="io.github.iamutkarshtiwari.trivia.activity.Trivia"
+    tools:context="io.github.iamutkarshtiwari.trivia.activity.TriviaActivity"
     tools:ignore="NestedWeights">
 
     <RelativeLayout

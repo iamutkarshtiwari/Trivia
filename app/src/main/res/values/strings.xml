@@ -81,5 +81,10 @@
     <string name="rank">Rank</string>
     <string name="scores">Scores</string>
     <string name="no_questions_available">Couldn\'t find any questions from last play session</string>
+    <string name="last_session_title">Answers from last session</string>
+    <string name="shall_we_start">Let\'s start, shall we?</string>
+    <string name="start_btn_text">Yeah sure!</string>
+    <string name="trivia_title">Trivia</string>
+    <string name="trivia_subtitle">Do you think you know everything?</string>
 
 </resources>

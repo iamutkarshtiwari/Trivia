@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
@@ -25,6 +26,8 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
@@ -57,7 +60,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -75,21 +77,19 @@ import io.github.iamutkarshtiwari.trivia.models.User;
 import io.github.iamutkarshtiwari.trivia.models.UserPrefs;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 
-public class Trivia extends AppCompatActivity
+public class TriviaActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, NavigationView.OnNavigationItemSelectedListener,
         View.OnClickListener {
 
 
-    private final String TRIVIA_URL = "https://opentdb.com/api.php?amount=1";
-    private final String JSERVICE_URL = "http://jservice.io/api/random?count=1";
     private static final String TAG = "MainActivity";
     private static final int RC_SIGN_OUT = 9002;
     private static final int RC_CATEGORY = 9003;
     private static final int RC_PREFERENCE = 9004;
     private static final int RC_PROFILE = 9005;
     private static final int RC_LEADERBOARD = 9006;
-    private static final String MY_PREFS_NAME = "Trivia";
-
+    private static final int RC_START = 9007;
+    private static final String MY_PREFS_NAME = "TriviaSettings";
     private static String correctOption = "";
     private static ArrayList<String> options = new ArrayList<>();
     private static boolean isCurrentQuestionBooleanStyled = false;
@@ -97,7 +97,8 @@ public class Trivia extends AppCompatActivity
     private static int correctOptionIndex = -1;
     private static String hitURL = "";
     private static LinearLayout nextQuestionBtn, removeOneBtn, extraSecondsBtn;
-
+    private final String TRIVIA_URL = "https://opentdb.com/api.php?amount=1";
+    private final String JSERVICE_URL = "http://jservice.io/api/random?count=1";
     private FirebaseAuth mAuth;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -117,10 +118,21 @@ public class Trivia extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+
+        findViewById(R.id.appbar).bringToFront();
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window w = getWindow(); // in Activity's onCreate() for instance
+
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        }
+
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -142,11 +154,14 @@ public class Trivia extends AppCompatActivity
         pref = this.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         editor = pref.edit();
 
+        // Send to confirmation screen
+        sendToStartActivity();
+
         // Loads user prefs
         loadPreferences();
         // Load player name & score
         ((TextView) findViewById(R.id.playerName)).setText(pref.getString("user_name", ""));
-//        ((TextView) findViewById(R.id.playerScore)).setText(pref.getString("user_name", ""));
+        // ((TextView) findViewById(R.id.playerScore)).setText(pref.getString("user_name", ""));
 
         // Next question
         nextQuestionBtn = (LinearLayout) findViewById(R.id.next_question);
@@ -181,6 +196,7 @@ public class Trivia extends AppCompatActivity
                 // Hide indication symbol
                 toggleTextTypeSymbol(View.INVISIBLE);
             }
+
             public void onTextChanged(CharSequence s, int start, int before,
                                       int count) {
             }
@@ -193,7 +209,6 @@ public class Trivia extends AppCompatActivity
         countdownProgress = (ProgressBar) findViewById(R.id.progressBar);
         countdownProgress.startAnimation(an);
         progressValue = (TextView) findViewById(R.id.progressValue);
-
 
         // Load a question on start
         nextQuestion();
@@ -213,7 +228,14 @@ public class Trivia extends AppCompatActivity
                 }
             });
         }
+    }
 
+    /**
+     * Redirect to 'Shall we start' prompt screen
+     */
+    public void sendToStartActivity() {
+        Intent intent = new Intent(TriviaActivity.this, StartActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -232,10 +254,12 @@ public class Trivia extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == RC_CATEGORY) {
+        if (requestCode == RC_CATEGORY) {
             loadPreferences();
         } else if (requestCode == RC_PREFERENCE) {
             loadPreferences();
+        } else if (requestCode == RC_START) {
+            onBackPressed();
         }
     }
 
@@ -246,21 +270,21 @@ public class Trivia extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_profile) {
-            Intent intent = new Intent(getApplicationContext(), Profile.class);
+            Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
             startActivityForResult(intent, RC_PROFILE);
         } else if (id == R.id.nav_leaderboard) {
-            Intent intent = new Intent(getApplicationContext(), Leaderboard.class);
+            Intent intent = new Intent(getApplicationContext(), LeaderboardActivity.class);
             startActivityForResult(intent, RC_LEADERBOARD);
         } else if (id == R.id.nav_category) {
-            Intent intent = new Intent(getApplicationContext(), Category.class);
+            Intent intent = new Intent(getApplicationContext(), CategoryActivity.class);
             startActivityForResult(intent, RC_CATEGORY);
 
         } else if (id == R.id.nav_preferences) {
-            Intent intent = new Intent(getApplicationContext(), Preferences.class);
+            Intent intent = new Intent(getApplicationContext(), PreferencesActivity.class);
             startActivityForResult(intent, RC_PREFERENCE);
         } else if (id == R.id.nav_logout) {
             // Confirmation alert
-            AlertDialog.Builder builder = new AlertDialog.Builder(Trivia.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(TriviaActivity.this);
             builder.setMessage(getStringFromID(R.string.wanna_logout));
             builder.setPositiveButton(getStringFromID(R.string.ok), new DialogInterface.OnClickListener() {
                 @Override
@@ -381,18 +405,18 @@ public class Trivia extends AppCompatActivity
         }
 
         String url = hitURL + params;
-        Log.e("URL HIT: " , url);
+        Log.e("URL HIT: ", url);
         new HttpGetRequest().execute(url);
     }
 
     /**
      * Returns random item from passed ArrayList
+     *
      * @param list list from which random item is picked
-     * @param <T> generic datatype
+     * @param <T>  generic datatype
      * @return random item from the list
      */
-    private <T> T getRandomItem(ArrayList<T> list)
-    {
+    private <T> T getRandomItem(ArrayList<T> list) {
         Random random = new Random();
         int listSize = list.size();
         int randomIndex = random.nextInt(listSize);
@@ -404,6 +428,7 @@ public class Trivia extends AppCompatActivity
      * Remove articles (a|an|the)
      * Removes white spaces
      * Removes special characters
+     *
      * @param str to be sanitized
      * @return sanitized string
      */
@@ -419,6 +444,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Parse the JSON response from triviaDB
+     *
      * @param jsonObject containing the response
      */
     public void retrieveQuestion(JSONObject jsonObject) {
@@ -559,88 +585,6 @@ public class Trivia extends AppCompatActivity
         }
     }
 
-
-    /**
-     * Asyncronous class to make HTTP request to Trivia questions API
-     */
-    public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
-        public static final String REQUEST_METHOD = "GET";
-        public static final int READ_TIMEOUT = 10000;
-        public static final int CONNECTION_TIMEOUT = 10000;
-        TextView networkText;
-        AVLoadingIndicatorView spinner;
-        @Override
-        protected void onPreExecute() {
-            spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
-            spinner.setVisibility(View.VISIBLE);
-            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected JSONObject doInBackground(String... params){
-            String stringUrl = params[0];
-            String result;
-            String inputLine;
-            JSONObject jsonObject = null;
-            try {
-                //Create a URL object holding our url
-                URL myUrl = new URL(stringUrl);
-                //Create a connection
-                HttpURLConnection connection =(HttpURLConnection)
-                        myUrl.openConnection();
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Connect to our url
-                connection.connect();
-                int responseCode = connection.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    //Create a new InputStreamReader
-                    InputStreamReader streamReader = new
-                            InputStreamReader(connection.getInputStream(), "UTF-8");
-                    //Create a new buffered reader and String Builder
-                    BufferedReader reader = new BufferedReader(streamReader);
-                    StringBuilder stringBuilder = new StringBuilder();
-                    //Check if the line we are reading is not null
-                    while ((inputLine = reader.readLine()) != null) {
-                        stringBuilder.append(inputLine);
-                    }
-                    //Close our InputStream and Buffered reader
-                    reader.close();
-                    streamReader.close();
-                    //Set our result equal to our stringBuilder
-                    result = stringBuilder.toString();
-                    if (hitURL.equalsIgnoreCase(JSERVICE_URL)) {
-                        JSONArray jsonArray = new JSONArray(result);
-                        jsonObject = jsonArray.getJSONObject(0);
-                    } else {
-                        jsonObject = new JSONObject(result);
-                    }
-
-                } else {
-                    jsonObject = null;
-                }
-
-            }
-            catch(Exception e){
-                Log.e(e.getClass().getName(), e.getMessage(), e);
-                Log.e("ERROR :", "Error connecting to network");
-                jsonObject = null;
-            }
-            return jsonObject;
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject result){
-            spinner.setVisibility(View.INVISIBLE);
-            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
-            retrieveQuestion(result);
-        }
-    }
-
     public void toggleQuestionAndCategoryVisibilty(int flag) {
         TextView questionView = (TextView) findViewById(R.id.question);
         questionView.setVisibility(flag);
@@ -651,6 +595,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Toggles editText panel visibility
+     *
      * @param flag
      */
     public void toggleTextTypeView(int flag) {
@@ -664,6 +609,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Toggle indicator symbol over editText
+     *
      * @param flag
      * @return indicator symbol imageView
      */
@@ -673,9 +619,9 @@ public class Trivia extends AppCompatActivity
         return answerSymbol;
     }
 
-
     /**
      * Toggles multiple choice option visibility
+     *
      * @param flag
      */
     public void toggleMultiChoiceOptionView(int flag) {
@@ -691,6 +637,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Checks selected answer from provided options
+     *
      * @param view
      */
     public void checkAnswer(View view) {
@@ -701,11 +648,11 @@ public class Trivia extends AppCompatActivity
 
         int index = 1;
         String id = options.size() == 2 ? "boolean" : "option";
-        for (String option: options) {
+        for (String option : options) {
             int resID = getResources().getIdentifier(id + index, "id", getPackageName());
             View includedLayout = findViewById(resID);
 
-            Button optionButton = (Button)includedLayout.findViewById(R.id.option);
+            Button optionButton = (Button) includedLayout.findViewById(R.id.option);
             ImageView symbol = (ImageView) includedLayout.findViewById(R.id.symbol);
             // If pressed option
             if (option.equalsIgnoreCase(pressedOption)) {
@@ -736,6 +683,7 @@ public class Trivia extends AppCompatActivity
     /**
      * Does a fuzzy string comparison between entered text
      * and correct answer
+     *
      * @param enteredText text entered by the user
      */
     public void compareAnswers(String enteredText) {
@@ -750,7 +698,7 @@ public class Trivia extends AppCompatActivity
             ratio = (ratio2 + ratio3) / 2;
         }
 
-        Log.e("RATIO: ", ratio+"");
+        Log.e("RATIO: ", ratio + "");
 
         ImageView symbol = toggleTextTypeSymbol(View.VISIBLE);
         if ((words == 1 && ratio > 90) || (words > 1 && ratio > 80)) {
@@ -761,7 +709,6 @@ public class Trivia extends AppCompatActivity
         }
     }
 
-
     private void insertQuestion(String question, String answer) {
         ContentValues values = new ContentValues();
         values.put(QuestionEntry.COLUMN_QUESTION, question);
@@ -771,6 +718,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Removes one of the wrong options
+     *
      * @param pressedButton this pressed button
      */
     public void removeOneOption(View pressedButton) {
@@ -794,6 +742,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Add extra seconds
+     *
      * @param pressedButton this pressed button
      */
     public void giveExtraSeconds(View pressedButton) {
@@ -804,7 +753,6 @@ public class Trivia extends AppCompatActivity
         startTimer(leftTime);
         disableOptionButton(pressedButton);
     }
-
 
     public void enableOptionButton(View button) {
         button.setAlpha(1.0f);
@@ -818,6 +766,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Countdown timer for questions
+     *
      * @param secs seconds
      */
     public void startTimer(final int secs) {
@@ -831,6 +780,7 @@ public class Trivia extends AppCompatActivity
                 countdownProgress.setProgress((int) ((seconds / (float) (secs - 1)) * 100.0));
                 progressValue.setText(String.format("%d", seconds));
             }
+
             @Override
             public void onFinish() {
                 // Move to next question
@@ -861,6 +811,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Toggels the network error message
+     *
      * @param flag to toggle visibility
      */
     public void toggleNetworkMessage(int flag) {
@@ -870,6 +821,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Toggles Question panel visibility
+     *
      * @param flag to toggle visibility
      */
     public void toggleQuestionPanelVisibilty(int flag) {
@@ -879,6 +831,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Disables clicks on options until next set of question
+     *
      * @param flag to toggle click listener
      */
     public void enableClickOnOptions(boolean flag) {
@@ -893,6 +846,7 @@ public class Trivia extends AppCompatActivity
 
     /**
      * Enable clicks on this view
+     *
      * @param view of which clicks are to be enabled
      */
     public void enableTouch(View view) {
@@ -906,6 +860,7 @@ public class Trivia extends AppCompatActivity
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
         createToast(R.string.google_services_error, Toast.LENGTH_SHORT);
     }
+
     /**
      * Toast creator
      *
@@ -1028,7 +983,6 @@ public class Trivia extends AppCompatActivity
         currentUserPrefs.setDifficulty(pref.getString("user_difficulty", ""));
     }
 
-
     /**
      * Clear all stored preferences
      */
@@ -1072,7 +1026,7 @@ public class Trivia extends AppCompatActivity
      * Redirect to login activity
      */
     public void sendToLogin() {
-        Intent intent = new Intent(Trivia.this, LoginActivity.class);
+        Intent intent = new Intent(TriviaActivity.this, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
@@ -1104,6 +1058,87 @@ public class Trivia extends AppCompatActivity
     public Bitmap decodeToBase64(String input) {
         byte[] decodedByte = Base64.decode(input, 0);
         return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+    }
+
+    /**
+     * Asyncronous class to make HTTP request to TriviaActivity questions API
+     */
+    public class HttpGetRequest extends AsyncTask<String, Void, JSONObject> {
+        public static final String REQUEST_METHOD = "GET";
+        public static final int READ_TIMEOUT = 10000;
+        public static final int CONNECTION_TIMEOUT = 10000;
+        TextView networkText;
+        AVLoadingIndicatorView spinner;
+
+        @Override
+        protected void onPreExecute() {
+            spinner = (AVLoadingIndicatorView) findViewById(R.id.spinner);
+            spinner.setVisibility(View.VISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected JSONObject doInBackground(String... params) {
+            String stringUrl = params[0];
+            String result;
+            String inputLine;
+            JSONObject jsonObject = null;
+            try {
+                //Create a URL object holding our url
+                URL myUrl = new URL(stringUrl);
+                //Create a connection
+                HttpURLConnection connection = (HttpURLConnection)
+                        myUrl.openConnection();
+                //Set methods and timeouts
+                connection.setRequestMethod(REQUEST_METHOD);
+                connection.setReadTimeout(READ_TIMEOUT);
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+
+                //Connect to our url
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    //Create a new InputStreamReader
+                    InputStreamReader streamReader = new
+                            InputStreamReader(connection.getInputStream(), "UTF-8");
+                    //Create a new buffered reader and String Builder
+                    BufferedReader reader = new BufferedReader(streamReader);
+                    StringBuilder stringBuilder = new StringBuilder();
+                    //Check if the line we are reading is not null
+                    while ((inputLine = reader.readLine()) != null) {
+                        stringBuilder.append(inputLine);
+                    }
+                    //Close our InputStream and Buffered reader
+                    reader.close();
+                    streamReader.close();
+                    //Set our result equal to our stringBuilder
+                    result = stringBuilder.toString();
+                    if (hitURL.equalsIgnoreCase(JSERVICE_URL)) {
+                        JSONArray jsonArray = new JSONArray(result);
+                        jsonObject = jsonArray.getJSONObject(0);
+                    } else {
+                        jsonObject = new JSONObject(result);
+                    }
+
+                } else {
+                    jsonObject = null;
+                }
+
+            } catch (Exception e) {
+                Log.e(e.getClass().getName(), e.getMessage(), e);
+                Log.e("ERROR :", "Error connecting to network");
+                jsonObject = null;
+            }
+            return jsonObject;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject result) {
+            spinner.setVisibility(View.INVISIBLE);
+            ((TextView) findViewById(R.id.loading_question)).setVisibility(View.INVISIBLE);
+            retrieveQuestion(result);
+        }
     }
 
     // Async class to download profile image
@@ -1138,7 +1173,8 @@ public class Trivia extends AppCompatActivity
 
         /**
          * Download bitmap image form URL
-         * @param  photoUrl of the image
+         *
+         * @param photoUrl of the image
          * @return download bitmap image
          */
         private Bitmap downloadBitmap(String photoUrl) {

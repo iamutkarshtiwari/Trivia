@@ -24,5 +24,6 @@
     <color name="recyclerBG">#562968</color>
     <color name="totalNumberBG">#C0B9C4</color>
     <color name="recyclerItemDivider">#616161</color>
+    <color name="actionbar_opacity">#33000000</color>
 
 </resources>

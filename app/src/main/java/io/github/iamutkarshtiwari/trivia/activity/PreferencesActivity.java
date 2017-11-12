@@ -28,7 +28,7 @@ import java.util.Arrays;
 import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
-public class Preferences extends AppCompatActivity {
+public class PreferencesActivity extends AppCompatActivity {
 
     private static final String TRIVIA_SETTINGS = "TriviaSettings";
 
@@ -54,6 +54,9 @@ public class Preferences extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("ERROR: ", "Could not set up back button");
         }
+
+        // Remove action bar elevation
+        getSupportActionBar().setElevation(0);
 
         // Firebase instance
         mAuth = FirebaseAuth.getInstance();
@@ -209,7 +212,7 @@ public class Preferences extends AppCompatActivity {
      * @param message Message to be displayed
      */
     public void createProgressDialog(int message) {
-        progressDialog = new ProgressDialog(Preferences.this);
+        progressDialog = new ProgressDialog(PreferencesActivity.this);
         progressDialog.setIndeterminate(true);
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.setMessage(String.format(getString(message)));

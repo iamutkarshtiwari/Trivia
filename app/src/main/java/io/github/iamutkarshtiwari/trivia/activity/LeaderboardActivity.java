@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.LeaderboardRecyclerViewAdapter;
 
-public class Leaderboard extends AppCompatActivity {
+public class LeaderboardActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private ArrayList<String> number;
@@ -39,6 +39,9 @@ public class Leaderboard extends AppCompatActivity {
             Log.e("ERROR: ", "Could not set up back button");
         }
 
+        // Remove action bar elevation
+        getSupportActionBar().setElevation(0);
+
         recyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler);
         recyclerViewLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(recyclerViewLayoutManager);
@@ -48,7 +51,7 @@ public class Leaderboard extends AppCompatActivity {
 
 
         recyclerViewVerticalAdapter = new LeaderboardRecyclerViewAdapter();
-        horizontalLayout = new LinearLayoutManager(Leaderboard.this, LinearLayoutManager.VERTICAL, false);
+        horizontalLayout = new LinearLayoutManager(LeaderboardActivity.this, LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(horizontalLayout);
         recyclerView.setAdapter(recyclerViewVerticalAdapter);
 
@@ -97,7 +100,7 @@ public class Leaderboard extends AppCompatActivity {
 
         // Adding on item click listener to RecyclerView.
         recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-            GestureDetector gestureDetector = new GestureDetector(Leaderboard.this, new GestureDetector.SimpleOnGestureListener() {
+            GestureDetector gestureDetector = new GestureDetector(LeaderboardActivity.this, new GestureDetector.SimpleOnGestureListener() {
                 @Override public boolean onSingleTapUp(MotionEvent motionEvent) {
                     return true;
                 }
@@ -109,7 +112,7 @@ public class Leaderboard extends AppCompatActivity {
                     //Getting clicked value.
                     recyclerViewItemPosition = Recyclerview.getChildAdapterPosition(ChildView);
                     // Showing clicked item value on screen using toast message.
-                    Toast.makeText(Leaderboard.this, number.get(recyclerViewItemPosition), Toast.LENGTH_LONG).show();
+                    Toast.makeText(LeaderboardActivity.this, number.get(recyclerViewItemPosition), Toast.LENGTH_LONG).show();
 
                 }
 

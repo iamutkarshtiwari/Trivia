@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/start_scrollview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    tools:context="io.github.iamutkarshtiwari.trivia.activity.StartActivity"
+    tools:ignore="NestedWeights">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:background="@color/firstOption">
+
+
+
+        <TextView
+            android:id="@+id/start_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="@string/shall_we_start"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+
+        <Button
+            android:id="@+id/yes"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAllCaps="false"
+            android:text="@string/start_btn_text"
+            android:textColor="@color/white"
+            android:background="@drawable/start_button_bg"
+            android:layout_below="@id/start_title"
+            android:layout_marginTop="16dp"
+            android:layout_centerHorizontal="true"/>
+
+
+
+
+    </RelativeLayout>
+</ScrollView>

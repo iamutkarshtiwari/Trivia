@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:fitsSystemWindows="true"
-    tools:context="io.github.iamutkarshtiwari.trivia.activity.Leaderboard"
+    tools:context="io.github.iamutkarshtiwari.trivia.activity.LeaderboardActivity"
     tools:ignore="NestedWeights">
 
     <RelativeLayout

@@ -228,7 +228,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
      * Sends to Main Activity
      */
     public void sendToTrivia() {
-        Intent intent = new Intent(getApplicationContext(), Trivia.class);
+        Intent intent = new Intent(getApplicationContext(), TriviaActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

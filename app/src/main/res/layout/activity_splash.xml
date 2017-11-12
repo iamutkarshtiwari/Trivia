@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/firstOption">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/trivia_logo"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/trivia" />
+
+        <io.github.iamutkarshtiwari.trivia.utils.MyTextView
+            android:id="@+id/trivia_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/trivia_title"
+            android:layout_marginTop="8dp"
+            android:layout_below="@id/trivia_logo"
+            android:layout_centerHorizontal="true"
+            android:textStyle="bold"
+            android:textSize="29sp"
+            android:textColor="@color/white"
+            android:textAlignment="center"
+            app:fontName="JustTell"/>
+
+        <io.github.iamutkarshtiwari.trivia.utils.MyTextView
+            android:id="@+id/trivia_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/trivia_title"
+            android:gravity="center_horizontal"
+            android:text="@string/trivia_subtitle"
+            android:textColor="@color/white"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_centerHorizontal="true"
+            android:textAlignment="center"
+            app:fontName="JustTell"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

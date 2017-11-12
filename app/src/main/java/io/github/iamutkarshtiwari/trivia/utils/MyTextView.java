@@ -1,4 +1,4 @@
-package io.github.iamutkarshtiwari.trivia.activity;
+package io.github.iamutkarshtiwari.trivia.utils;
 
 import android.content.Context;
 import android.content.res.TypedArray;

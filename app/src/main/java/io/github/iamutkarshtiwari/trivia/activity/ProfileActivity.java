@@ -28,7 +28,7 @@ import io.github.iamutkarshtiwari.trivia.models.Question;
 import io.github.iamutkarshtiwari.trivia.models.QuestionContract;
 import io.github.iamutkarshtiwari.trivia.models.ScoreStatsAdapter;
 
-public class Profile extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ProfileActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TRIVIA_SETTINGS = "TriviaSettings";
     private static final int QUESTION_LOADER = 0;
@@ -56,19 +56,18 @@ public class Profile extends AppCompatActivity implements LoaderManager.LoaderCa
             Log.e("ERROR: ", "Could not set up back button");
         }
 
+        // Remove action bar elevation
+        getSupportActionBar().setElevation(0);
+
 
         // Shared preferences
         pref = this.getSharedPreferences(TRIVIA_SETTINGS, MODE_PRIVATE);
         editor = pref.edit();
 
-
-        //
-
-
         // Stats section
         statsRecyclerView = (RecyclerView) findViewById(R.id.category_stats);
         scoreStatsAdapter = new ScoreStatsAdapter(getCategoryStats());
-        statsViewLayoutManager = new LinearLayoutManager(Profile.this, LinearLayoutManager.HORIZONTAL, false);
+        statsViewLayoutManager = new LinearLayoutManager(ProfileActivity.this, LinearLayoutManager.HORIZONTAL, false);
         statsRecyclerView.setLayoutManager(statsViewLayoutManager);
         statsRecyclerView.setAdapter(scoreStatsAdapter);
 
@@ -78,7 +77,7 @@ public class Profile extends AppCompatActivity implements LoaderManager.LoaderCa
         SnapHelper snapper = new LinearSnapHelper();
         prevQuestionsRecyclerView = (RecyclerView) findViewById(R.id.previous_questions);
         prevQuestionsAdapter = new PrevQuestionsAdapter(prevQuestions);
-        prevQuestionsViewLayoutManager = new LinearLayoutManager(Profile.this, LinearLayoutManager.HORIZONTAL, false);
+        prevQuestionsViewLayoutManager = new LinearLayoutManager(ProfileActivity.this, LinearLayoutManager.HORIZONTAL, false);
         prevQuestionsRecyclerView.setLayoutManager(prevQuestionsViewLayoutManager);
         prevQuestionsRecyclerView.setAdapter(prevQuestionsAdapter);
         snapper.attachToRecyclerView(prevQuestionsRecyclerView);

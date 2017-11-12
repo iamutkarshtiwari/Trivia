@@ -17,28 +17,6 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <!--<style name="AppTheme" parent="Theme.AppCompat.Light">-->
-        <!--&lt;!&ndash; Customize your theme here. &ndash;&gt;-->
-        <!--<item name="colorPrimary">@color/colorPrimary</item>-->
-        <!--<item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
-        <!--<item name="colorAccent">@color/colorAccent</item>-->
-        <!--<item name="colorControlNormal">@color/white</item>-->
-        <!--<item name="android:textColorPrimary">@color/white</item>-->
-    <!--</style>-->
-
-
-    <!--<style name="AppTheme.Dark.Dialog" parent="Theme.AppCompat.Dialog">-->
-        <!--<item name="colorAccent">@color/black</item>-->
-        <!--<item name="android:textColorPrimary">@color/white</item>-->
-        <!--<item name="android:background">@color/black</item>-->
-    <!--</style>-->
-
-
-    <!--<style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />-->
-
-    <!--<style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />-->
-
-
     <style name="LoginTextLabel" parent="TextAppearance.AppCompat.Body1">
         <!-- Hint color and label color in FALSE state -->
         <item name="android:textColorHint">@android:color/white</item>
@@ -55,12 +33,10 @@
 
 
 
-
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">@color/firstOption</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorControlNormal">@color/white</item>
@@ -72,9 +48,28 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" >
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="Theme.AppCompat.Light.NoActionBar.FullScreen" parent="@style/Theme.AppCompat.Light">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <style name="TransparentActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/firstOption</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
 
 </resources>

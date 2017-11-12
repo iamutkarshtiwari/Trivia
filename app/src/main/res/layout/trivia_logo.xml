@@ -13,7 +13,7 @@
         android:layout_marginBottom="8dp"
         android:src="@drawable/trivia" />
 
-    <io.github.iamutkarshtiwari.trivia.activity.MyTextView
+    <io.github.iamutkarshtiwari.trivia.utils.MyTextView
         android:id="@+id/trivia_title"
         android:layout_width="match_parent"
         android:layout_height="32dp"

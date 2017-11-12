@@ -32,7 +32,7 @@ import io.github.iamutkarshtiwari.trivia.R;
 import io.github.iamutkarshtiwari.trivia.models.CustomList;
 import io.github.iamutkarshtiwari.trivia.models.User;
 
-public class Category extends AppCompatActivity implements View.OnClickListener {
+public class CategoryActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TRIVIA_SETTINGS = "TriviaSettings";
     private static final String PREV_QUESTIONS = "PreviousQuestions";
@@ -85,7 +85,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
         String[] categoryNames = getResources().getStringArray(R.array.category_names);
         Arrays.sort(categoryNames);
         categoryAdapter = new
-                CustomList(Category.this, categoryNames, loadedSelections);
+                CustomList(CategoryActivity.this, categoryNames, loadedSelections);
         categoryListView = (ListView) findViewById(R.id.category_list);
         categoryListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         categoryListView.setAdapter(categoryAdapter);
@@ -135,7 +135,7 @@ public class Category extends AppCompatActivity implements View.OnClickListener 
      * @param message Message to be displayed
      */
     public void createProgressDialog(int message) {
-        progressDialog = new ProgressDialog(Category.this);
+        progressDialog = new ProgressDialog(CategoryActivity.this);
         progressDialog.setIndeterminate(true);
         progressDialog.setCanceledOnTouchOutside(false);
         progressDialog.setMessage(String.format(getString(message)));
